@@ -151,8 +151,87 @@ function renderWorkout(){let root=$('workoutContent');if(!profile||!plan){root.i
 function selectSession(i,btn){document.querySelectorAll('#workoutContent .pilltab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');renderSession(i);}
 function renderSession(i){if(!plan)return;let s=plan.sessions[i];$('sessionDetails').innerHTML=`<div class="row" style="margin:8px 0 12px"><div><h3>${s.title}</h3><div class="muted small">${s.focus} · ${s.minutes} min</div></div><span class="chip lime">SESSÃO ${i+1}</span></div>${s.exercises.map((e,j)=>`<div class="exercise"><div><strong>${e.selected}</strong><small>${e.focus} · ${e.sets}</small></div><select class="altselect" onchange="changeExercise(${i},${j},this.value)" aria-label="Alternativa para ${e.name}"><option value="${e.name}" ${e.selected===e.name?'selected':''}>Exercício principal</option>${e.alt.map(a=>`<option ${e.selected===a?'selected':''}>${escapeHtml(a)}</option>`).join('')}</select></div>`).join('')}<div class="actions"><button class="btn" onclick="toast('Sessão registrada neste protótipo.')">Concluir sessão</button><button class="btn secondary" onclick="showPage('coach')">Preciso adaptar hoje</button></div>`;}
 function changeExercise(si,ei,val){plan.sessions[si].exercises[ei].selected=val;localStorage.setItem('shapen_plan',JSON.stringify(plan));toast('Alternativa atualizada.');}
-function renderNutrition(){let root=$('nutritionContent');if(!profile||!plan){root.innerHTML=`<div class="card empty"><div class="emoji">◉</div><h2>Personalize suas sugestões</h2><p class="muted">Conte seus hábitos, preferências e objetivo.</p><button class="btn" onclick="showPage('setup')">Configurar perfil</button></div>`;return;}let p=profile;let kcal=plan.kcal;let showKcal=p.sex!=='x';root.innerHTML=`<div class="grid"><div class="card span5"><div class="eyebrow">Referência educativa</div><h2>Seu ponto de partida</h2><div class="metric">${showKcal?Number(kcal ?? 0).toLocaleString('pt-BR')+' kcal':'Faixa não exibida'}</div><div class="muted small">${showKcal?'Estimativa inicial de energia, não uma prescrição.':'Prefiro não estimar energia sem essa referência.'}</div><div class="bar" style="margin:15px 0 8px"><i style="width:65%"></i></div><div class="row"><span class="muted small">Proteína estimada</span><b>${plan.protein} g/dia*</b></div><p class="muted small">*Referência aproximada para adulto saudável; pode não ser adequada para todas as pessoas. Não é meta obrigatória. Necessidades individuais variam.</p><div class="notice">Não siga metas calóricas sem orientação se tiver menos de 18 anos, estiver grávida/amamentando, tiver histórico de transtorno alimentar ou condição clínica relevante.</div></div><div class="card span7"><h2>Estrutura de refeições</h2>${plan.nutritionSummary?`<p>${escapeHtml(plan.nutritionSummary)}</p>`:''}<p class="muted small">Escolha uma opção que se encaixe no dia. Quantidades e necessidades individuais devem ser ajustadas com nutricionista.</p>${plan.meals.map(m=>`<div class="foodrow"><div class="foodicon">${m.icon}</div><div><strong>${m.title}</strong><small>${escapeHtml(m.desc)}</small><small class="good">${escapeHtml(m.alt)}</small></div></div>`).join('')}</div><div class="card span6"><h2>Lista de compras base</h2><div class="muted small">Revise rótulos e possíveis contaminações cruzadas em caso de alergia.</div>${shoppingList(p).map(x=>`<label class="checkline"><input type="checkbox"><span>${escapeHtml(x)}</span></label>`).join('')}</div><div class="card span6"><h2>Alternativas inteligentes</h2><div class="stack"><div><b>Quer economizar?</b><div class="muted small">Priorize alimentos básicos que você já usa, como arroz, feijão, ovos ou equivalentes vegetais, frutas da estação e legumes.</div></div><div><b>Sem tempo?</b><div class="muted small">Use combinações simples, alimentos previamente preparados e opções práticas que respeitem suas necessidades.</div></div><div><b>Não gosta de um ingrediente?</b><div class="muted small">Troque por outro alimento de função semelhante. Não existe um ingrediente obrigatório para evoluir.</div></div></div><button class="btn secondary" style="margin-top:15px" onclick="showPage('coach')">Pedir uma adaptação</button></div></div>`;}
-function shoppingList(p){let base=p.diet==='vegan'?['Tofu ou proteína vegetal','Feijão, lentilha e grão-de-bico','Aveia e arroz','Frutas da estação','Legumes e verduras','Batata ou mandioca']:p.diet==='vegetarian'?['Ovos e/ou tofu','Feijão, lentilha e grão-de-bico','Iogurte ou alternativa vegetal','Aveia e arroz','Frutas da estação','Legumes e verduras']:['Ovos ou alternativa vegetal','Frango, peixe ou tofu','Feijão e lentilha','Arroz e aveia','Frutas da estação','Legumes e verduras'];if(p.avoid)base.push('Verificar ingredientes e rótulos: '+p.avoid);return base;}
+function renderNutrition(){let root=$('nutritionContent');if(!profile||!plan){root.innerHTML=`<div class="card empty"><div class="emoji">◉</div><h2>Personalize suas sugestões</h2><p class="muted">Conte seus hábitos, preferências e objetivo.</p><button class="btn" onclick="showPage('setup')">Configurar perfil</button></div>`;return;}let p=profile;let kcal=plan.kcal;let showKcal=p.sex!=='x';root.innerHTML=`<div class="grid"><div class="card span5"><div class="eyebrow">Referência educativa</div><h2>Seu ponto de partida</h2><div class="metric">${showKcal?Number(kcal ?? 0).toLocaleString('pt-BR')+' kcal':'Faixa não exibida'}</div><div class="muted small">${showKcal?'Estimativa inicial de energia, não uma prescrição.':'Prefiro não estimar energia sem essa referência.'}</div><div class="bar" style="margin:15px 0 8px"><i style="width:65%"></i></div><div class="row"><span class="muted small">Proteína estimada</span><b>${plan.protein} g/dia*</b></div><p class="muted small">*Referência aproximada para adulto saudável; pode não ser adequada para todas as pessoas. Não é meta obrigatória. Necessidades individuais variam.</p><div class="notice">Não siga metas calóricas sem orientação se tiver menos de 18 anos, estiver grávida/amamentando, tiver histórico de transtorno alimentar ou condição clínica relevante.</div></div><div class="card span7"><h2>Estrutura de refeições</h2>${plan.nutritionSummary?`<p>${escapeHtml(plan.nutritionSummary)}</p>`:''}<p class="muted small">Escolha uma opção que se encaixe no dia. Quantidades e necessidades individuais devem ser ajustadas com nutricionista.</p>${plan.meals.map(m=>`<div class="foodrow"><div class="foodicon">${m.icon}</div><div><strong>${m.title}</strong><small>${escapeHtml(m.desc)}</small><small class="good">${escapeHtml(m.alt)}</small></div></div>`).join('')}</div><div class="card span6"><h2>Lista de compras base</h2><div class="muted small">Revise rótulos e possíveis contaminações cruzadas em caso de alergia.</div>${shoppingList(p).map(x=>`<label class="checkline"><input type="checkbox"><span>${escapeHtml(x)}</span></label>`).join('')}</div><div class="card span6"><h2>Alternativas inteligentes</h2><div class="stack"><div><b>Quer economizar?</b><div class="muted small">Priorize alimentos básicos que você já usa, como arroz, feijão, ovos ou equivalentes vegetais, frutas da estação e legumes.</div></div><div><b>Sem tempo?</b><div class="muted small">Use combinações simples, alimentos previamente preparados e opções práticas que respeitem suas necessidades.</div></div><div><b>Não gosta de um ingrediente?</b><div class="muted small">Troque por outro alimento de função semelhante. Não existe um ingrediente obrigatório para evoluir.</div></div></div><button class="btn secondary" style="margin-top:15px" onclick="adaptNutrition()">Pedir uma adaptação</button></div></div>`;}
+function adaptNutrition(){
+  const root = $('nutritionContent');
+  let box = document.getElementById('nutritionAdaptBox');
+
+  if (box) {
+    box.remove();
+    return;
+  }
+
+  box = document.createElement('div');
+  box.id = 'nutritionAdaptBox';
+  box.className = 'card';
+  box.style.marginTop = '16px';
+
+  box.innerHTML = `
+    <h2>Adaptar minhas refeições</h2>
+    <p class="muted small">Conte o que você gostaria de trocar.</p>
+    <textarea id="nutritionAdaptRequest"
+      placeholder="Ex.: trocar frango por ovos ou tofu"
+      style="width:100%;min-height:90px;padding:12px;border-radius:10px;background:#241633;color:#fff;border:1px solid #5b4274"></textarea>
+    <div style="display:flex;gap:8px;margin-top:12px">
+      <button class="btn" onclick="submitNutritionAdapt()">Aplicar adaptação</button>
+      <button class="btn secondary" onclick="document.getElementById('nutritionAdaptBox').remove()">Cancelar</button>
+    </div>
+    <p id="nutritionAdaptStatus" class="muted small"></p>
+  `;
+
+  root.appendChild(box);
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+ async function submitNutritionAdapt() {
+  const input = $('nutritionAdaptRequest');
+  const status = $('nutritionAdaptStatus');
+  const button = document.querySelector('#nutritionAdaptBox .btn');
+  const request = input?.value.trim();
+
+  if (!request) {
+    status.textContent = 'Escreva o que deseja adaptar.';
+    return;
+  }
+
+  if (!profile || !plan) {
+    status.textContent = 'Configure seu perfil e crie um plano primeiro.';
+    return;
+  }
+
+  button.disabled = true;
+  button.textContent = 'Preparando sugestão...';
+  status.textContent = 'A IA está analisando seu pedido.';
+
+  try {
+    const res = await fetch('/api/coach', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: 'Sugira adaptações para estas refeições: ' +
+          request +
+          '. Responda em português, com substituições práticas e flexíveis, considerando o perfil e as restrições informadas. Não faça prescrição clínica.',
+        profile,
+        plan
+      })
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error || 'Não foi possível gerar a sugestão.');
+    }
+
+    status.textContent = data.reply ||
+      'Não foi possível gerar uma sugestão desta vez.';
+  } catch (error) {
+    status.textContent =
+      error.message || 'Falha ao conectar com a IA. Tente novamente.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Aplicar adaptação';
+  }
+}
+ function shoppingList(p){let base=p.diet==='vegan'?['Tofu ou proteína vegetal','Feijão, lentilha e grão-de-bico','Aveia e arroz','Frutas da estação','Legumes e verduras','Batata ou mandioca']:p.diet==='vegetarian'?['Ovos e/ou tofu','Feijão, lentilha e grão-de-bico','Iogurte ou alternativa vegetal','Aveia e arroz','Frutas da estação','Legumes e verduras']:['Ovos ou alternativa vegetal','Frango, peixe ou tofu','Feijão e lentilha','Arroz e aveia','Frutas da estação','Legumes e verduras'];if(p.avoid)base.push('Verificar ingredientes e rótulos: '+p.avoid);return base;}
 function toggleTask(id,on){if(on)done.add(id);else done.delete(id);localStorage.setItem('shapen_done',JSON.stringify([...done]));renderHome();}
 function quickAsk(q){$('chatInput').value=q;sendChat(q);}
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();let q=$('chatInput').value.trim();if(q)sendChat(q);});
