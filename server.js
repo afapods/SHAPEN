@@ -1,0 +1,129 @@
+import express from "express";
+import helmet from "helmet";
+import rateLimit from "express-rate-limit";
+import OpenAI from "openai";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+app.use(helmet({ contentSecurityPolicy: false }));
+app.use(express.json({ limit: "32kb" }));
+app.use("/api/", rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: true, legacyHeaders: false }));
+app.use(express.static(path.join(__dirname, "public")));
+
+function client() {
+  if (!process.env.OPENAI_API_KEY) {
+    const err = new Error("OPENAI_API_KEY não configurada no servidor.");
+    err.status = 503;
+    throw err;
+  }
+  return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+}
+function cleanProfile(p) {
+  if (!p || typeof p !== "object") throw new Error("Perfil ausente.");
+  const age = Number(p.age), weight = Number(p.weight), height = Number(p.height);
+  if (!Number.isFinite(age) || age < 18 || age > 100 ||
+      !Number.isFinite(weight) || weight < 30 || weight > 300 ||
+      !Number.isFinite(height) || height < 120 || height > 230) {
+    throw new Error("Perfil inválido. Este protótipo atende somente adultos e precisa de idade, peso e altura válidos.");
+  }
+  return {
+    goal: String(p.goal || "fitness").slice(0, 30),
+    age, weight, height, sex: String(p.sex || "x").slice(0, 10),
+    activity: Number(p.activity) || 1.375,
+    experience: String(p.experience || "beginner").slice(0, 30),
+    days: Math.max(2, Math.min(6, Number(p.days) || 3)),
+    duration: Math.max(20, Math.min(60, Number(p.duration) || 30)),
+    equipment: String(p.equipment || "gym").slice(0, 30),
+    cardio: String(p.cardio || "walk").slice(0, 30),
+    diet: String(p.diet || "mixed").slice(0, 30),
+    meals: Math.max(3, Math.min(5, Number(p.meals) || 4)),
+    budget: String(p.budget || "balanced").slice(0, 30),
+    cooking: String(p.cooking || "medium").slice(0, 30),
+    avoid: String(p.avoid || "").slice(0, 180),
+    limitations: String(p.limitations || "").slice(0, 300),
+    conditions: String(p.conditions || "").slice(0, 300),
+    target: String(p.target || "").slice(0, 90)
+  };
+}
+const goalNames = { muscle: "hipertrofia", fat: "redução de gordura", fitness: "condicionamento", recomp: "recomposição corporal" };
+
+app.post("/api/plan", async (req, res) => {
+  let p;
+  try { p = cleanProfile(req.body?.profile); }
+  catch (e) { return res.status(400).json({ error: e.message }); }
+  try {
+    const openai = client();
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      temperature: 0.4,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: `Você é um assistente de bem-estar que ajuda a estruturar hábitos e exercício para adultos. Gere um plano educativo, conservador, claro e em português do Brasil. Não faça diagnóstico nem prescrição clínica. Se houver lesão, dor, condição de saúde ou restrição relevante, reduza o nível de personalização e recomende avaliação de profissional habilitado. Nunca prometa resultados. Não incentive restrição extrema, perda rápida de peso, treino até falha obrigatório ou exercício com dor. Para nutrição, proponha combinações flexíveis de alimentos, não uma dieta clínica rígida. Evite calcular calorias específicas se houver sinal de risco clínico; em qualquer caso, explique que estimativas são aproximadas e precisam de validação profissional. O usuário tem 18 anos ou mais. Responda SOMENTE JSON válido no formato: {"aiSummary":"resumo curto do racional do plano","nutritionSummary":"resumo geral e limites","sessions":[{"title":"Dia A","focus":"Corpo inteiro","minutes":30,"exercises":[{"name":"Nome do exercício","selected":"Nome do exercício","sets":"2 × 8–12","focus":"grupo muscular","alt":["alternativa 1","alternativa 2","alternativa 3"],"key":"d0e0"}]}],"meals":[{"icon":"☀️","title":"Café da manhã","desc":"combinação flexível","alt":"alternativa compatível"}],"protein":100,"kcal":2000}. sessions deve ter exatamente o número de dias fornecido, com 3 a 6 exercícios por sessão conforme duração/experiência, incluindo aquecimento breve. Os campos exercise devem usar alternativas coerentes com o equipamento disponível. meals deve ter o número de refeições solicitado, sem quantidades rígidas. protein é apenas um número orientativo ou null; kcal deve ser null se não for apropriado estimar. Considere alergias/itens evitados; se não conseguir garantir segurança de um ingrediente, não o recomende e destaque que o usuário deve verificar rótulos. O campo key deve ser único, como d0e0, d0e1. Não inclua markdown.` },
+        { role: "user", content: `Crie uma estrutura inicial para este perfil (não trate como prescrição clínica): ${JSON.stringify(p)}. Objetivo: ${goalNames[p.goal] || p.goal}.` }
+      ]
+    });
+    const raw = response.choices?.[0]?.message?.content;
+    if (!raw) throw new Error("A IA não retornou conteúdo.");
+    const data = JSON.parse(raw);
+    // Validate/normalize shape before returning to the browser.
+    const sessions = Array.isArray(data.sessions) ? data.sessions.slice(0, p.days).map((s, i) => ({
+      title: String(s.title || `Sessão ${i+1}`).slice(0, 80),
+      focus: String(s.focus || "Corpo inteiro").slice(0, 100),
+      minutes: p.duration,
+      exercises: (Array.isArray(s.exercises) ? s.exercises : []).slice(0, 8).map((e, j) => ({
+        name: String(e.name || "Exercício").slice(0, 120),
+        selected: String(e.selected || e.name || "Exercício").slice(0, 120),
+        sets: String(e.sets || "2 × 8–12").slice(0, 40),
+        focus: String(e.focus || "").slice(0, 60),
+        alt: (Array.isArray(e.alt) ? e.alt : []).slice(0, 4).map(a => String(a).slice(0, 120)),
+        key: `d${i}e${j}`
+      }))
+    })) : [];
+    const meals = Array.isArray(data.meals) ? data.meals.slice(0, p.meals).map((m, i) => ({
+      icon: String(m.icon || "◉").slice(0, 8),
+      title: String(m.title || `Refeição ${i+1}`).slice(0, 80),
+      desc: String(m.desc || "Opção flexível").slice(0, 300),
+      alt: String(m.alt || "Escolha uma alternativa compatível").slice(0, 300)
+    })) : [];
+    if (!sessions.length || !meals.length) throw new Error("A IA retornou um plano incompleto. Tente novamente.");
+    return res.json({
+      aiSummary: String(data.aiSummary || "Plano inicial criado a partir do perfil informado.").slice(0, 700),
+      nutritionSummary: String(data.nutritionSummary || "Sugestões educativas; valide necessidades individuais com nutricionista.").slice(0, 700),
+      sessions, meals,
+      protein: data.protein !== null && data.protein !== undefined && Number.isFinite(Number(data.protein)) ? Number(data.protein) : null,
+      kcal: data.kcal !== null && data.kcal !== undefined && Number.isFinite(Number(data.kcal)) ? Number(data.kcal) : null
+    });
+  } catch (e) {
+    console.error("plan error:", e.message);
+    return res.status(e.status || 502).json({ error: e.status === 503 ? e.message : "Não foi possível gerar o plano agora. Verifique a configuração da API e tente novamente." });
+  }
+});
+
+app.post("/api/coach", async (req, res) => {
+  const message = String(req.body?.message || "").trim().slice(0, 400);
+  if (!message) return res.status(400).json({ error: "Escreva uma pergunta." });
+  try {
+    const openai = client();
+    const p = req.body?.profile && typeof req.body.profile === "object" ? JSON.stringify(req.body.profile).slice(0, 1800) : "perfil não configurado";
+    const plan = req.body?.plan && typeof req.body.plan === "object" ? JSON.stringify({ aiSummary: req.body.plan.aiSummary, sessions: req.body.plan.sessions, meals: req.body.plan.meals }).slice(0, 5000) : "plano não configurado";
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      temperature: 0.5,
+      messages: [
+        { role: "system", content: "Você é o Copiloto SHAPEN, um assistente de bem-estar em português brasileiro. Ajude a adaptar rotinas, sugerir substituições gerais e explicar princípios de treino e alimentação. Não diagnostique, não prescreva dieta clínica, não recomende restrição extrema, não incentive exercício com dor e não se apresente como profissional de saúde. Se houver dor, lesão, condição médica, gravidez, histórico de transtorno alimentar ou risco, recomende profissional habilitado. Seja direto, acolhedor e prático, com até 180 palavras." },
+        { role: "user", content: `Perfil do usuário: ${p}\nPlano atual: ${plan}\nPergunta: ${message}` }
+      ]
+    });
+    return res.json({ reply: response.choices?.[0]?.message?.content || "Não consegui gerar uma resposta agora." });
+  } catch (e) {
+    console.error("coach error:", e.message);
+    return res.status(e.status || 502).json({ error: e.status === 503 ? e.message : "Não foi possível responder agora. Verifique a configuração da API." });
+  }
+});
+
+app.get("/api/health", (_req, res) => res.json({ ok: true, aiConfigured: Boolean(process.env.OPENAI_API_KEY) }));
+app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
+app.listen(PORT, () => console.log(`SHAPEN rodando em http://localhost:${PORT}`));
