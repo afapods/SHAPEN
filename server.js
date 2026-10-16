@@ -304,6 +304,22 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
   if (!chosen) return res.status(400).json({ error: "Plano inválido." });
   if (!["card", "pix"].includes(paymentMethod)) return res.status(400).json({ error: "Forma de pagamento inválida." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Informe um e-mail válido." });
+  if (paymentMethod === "card") {
+    try {
+      const existing = await supabaseAdminRequest(req.shapenSupabase,
+        "shapen_subscriptions?select=id,plan,status&user_id=eq." + encodeURIComponent(req.shapenUser.id) +
+        "&provider=eq.mercadopago&payment_method=eq.card&order=created_at.desc&limit=20");
+      const pendingOrActive = (existing || []).find(x => ["pending", "active", "authorized"].includes(String(x.status || "").toLowerCase()));
+      if (pendingOrActive) {
+        return res.status(409).json({ error: pendingOrActive.status === "pending"
+          ? "Você já tem uma assinatura de cartão aguardando confirmação. Não inicie outro checkout para evitar duplicidade; aguarde a confirmação ou fale com o suporte."
+          : "Você já tem uma assinatura recorrente ativa. Cancele a renovação atual antes de contratar outro plano, para evitar cobranças duplicadas." });
+      }
+    } catch (error) {
+      console.error("Could not check existing subscriptions:", error.message);
+      return res.status(502).json({ error: "Não foi possível verificar suas assinaturas atuais. Nenhum novo checkout foi criado; tente novamente." });
+    }
+  }
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!token) return res.status(503).json({ error: "Checkout ainda não ativado: falta configurar MERCADOPAGO_ACCESS_TOKEN nas variáveis do servidor." });
   try {
@@ -331,7 +347,7 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
         method: "POST", headers,
         body: JSON.stringify({
           reason: chosen.title + " — assinatura mensal",
-          external_reference: req.shapenUser.id + "|" + tier,
+          external_reference: externalReference,
           payer_email: email,
           notification_url: baseUrl + "/api/mercadopago/webhook",
           auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: chosen.amount, currency_id: "BRL" },
@@ -464,13 +480,23 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
       const externalReference = String(payment.external_reference || "");
       const parts = externalReference.split("|");
       const userId = parts[0], tier = parts[1];
-      if (!userId || !SUBSCRIPTION_PLANS[tier] || payment.status !== "approved" || !parts[2]) return res.status(200).json({ received: true, ignored: true });
-      const end = new Date(Date.now() + 30 * 86400000).toISOString();
-      await supabaseAdminRequest(cfg, "shapen_subscriptions?external_reference=eq." + encodeURIComponent(externalReference) + "&user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=eq.pending", {
-        method: "PATCH", headers: { Prefer: "return=minimal" },
-        body: JSON.stringify({ provider_payment_id: String(payment.id), status: "active", current_period_end: end, updated_at: new Date().toISOString() })
-      });
-      return res.status(200).json({ received: true, verified: true });
+      if (!userId || !SUBSCRIPTION_PLANS[tier] || !parts[2]) return res.status(200).json({ received: true, ignored: true });
+      const paymentStatus = String(payment.status || "").toLowerCase();
+      if (paymentStatus === "approved") {
+        const end = new Date(Date.now() + 30 * 86400000).toISOString();
+        await supabaseAdminRequest(cfg, "shapen_subscriptions?external_reference=eq." + encodeURIComponent(externalReference) + "&user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=eq.pending", {
+          method: "PATCH", headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ provider_payment_id: String(payment.id), status: "active", current_period_end: end, updated_at: new Date().toISOString() })
+        });
+        return res.status(200).json({ received: true, verified: true });
+      }
+      if (["rejected", "cancelled", "refunded", "charged_back"].includes(paymentStatus)) {
+        await supabaseAdminRequest(cfg, "shapen_subscriptions?external_reference=eq." + encodeURIComponent(externalReference) + "&user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=eq.pending", {
+          method: "PATCH", headers: { Prefer: "return=minimal" },
+          body: JSON.stringify({ provider_payment_id: String(payment.id), status: "rejected", updated_at: new Date().toISOString() })
+        });
+      }
+      return res.status(200).json({ received: true, verified: true, paymentStatus });
     }
     return res.status(200).json({ received: true, ignored: true });
   } catch (error) {
