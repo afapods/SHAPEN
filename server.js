@@ -7,6 +7,9 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const app = express();
+// Render fica atrás de um proxy reverso; confie apenas no primeiro proxy para
+// que Express e express-rate-limit interpretem corretamente X-Forwarded-For.
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(helmet({ contentSecurityPolicy: false }));
