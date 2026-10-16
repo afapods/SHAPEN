@@ -226,15 +226,20 @@
 <div class="footer">SHAPEN · Protótipo funcional local · Recomendações educativas, não atendimento médico.</div>
 </div>
 <script>
-function choosePlan(tier){
+async function choosePlan(tier){
  const plans={basico:{name:'Básico',price:'R$ 24,90/mês'},premium:{name:'Premium',price:'R$ 59,90/mês'},ultimate:{name:'Ultimate',price:'R$ 99,90/mês'}};
- const chosen=plans[tier];
- if(!chosen)return;
+ const chosen=plans[tier];if(!chosen)return;
  localStorage.setItem('shapen_selected_plan',tier);
- const target=$('planSelectionText');
- if(target)target.textContent=chosen.name+' — '+chosen.price+'. Seleção registrada neste dispositivo; pagamento ainda não ativado.';
- document.querySelectorAll('.plan-button').forEach(b=>{b.classList.toggle('secondary',!b.getAttribute('onclick').includes("'"+tier+"'"));});
- toast('Plano '+chosen.name+' selecionado. A cobrança ainda será ativada.');
+ const target=$('planSelectionText');const status=document.getElementById('checkoutStatus');
+ if(target)target.textContent=chosen.name+' — '+chosen.price+'. Preparando checkout...';
+ const email=document.getElementById('checkoutEmail')?.value.trim();
+ if(!email || !email.includes('@') || !email.includes('.')){if(status)status.textContent='Informe um e-mail válido para continuar.';toast('Informe seu e-mail para assinar.');return;}
+ try{
+  const res=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:tier,email:email})});
+  const data=await res.json();if(!res.ok)throw new Error(data.error||'Não foi possível iniciar o pagamento.');
+  if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
+  if(status)status.innerHTML='Checkout pronto: <a href="'+escapeHtml(data.checkoutUrl)+'" target="_blank" rel="noopener noreferrer">abrir pagamento seguro</a>';
+ }catch(e){if(status)status.textContent=e.message||'Checkout indisponível.';toast(e.message||'Não foi possível iniciar o pagamento.');}
 }
 function renderPlanSelection(){
  const tier=localStorage.getItem('shapen_selected_plan');
