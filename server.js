@@ -264,6 +264,62 @@ app.post("/api/adapt-meals", authenticateSupabaseRequest, requireShapenPlan("pre
 
 const SUBSCRIPTION_PLANS = { basico: { title: "SHAPEN Básico", amount: 24.90 }, premium: { title: "SHAPEN Premium", amount: 59.90 }, ultimate: { title: "SHAPEN Ultimate", amount: 99.90 } };
 
+
+// Administrative access is restricted to explicitly configured email addresses.
+function requireShapenAdmin(req, res, next) {
+  const allowed = String(process.env.ADMIN_EMAILS || "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+  if (!allowed.length) return res.status(503).json({ error: "Painel administrativo ainda não configurado. Defina ADMIN_EMAILS no Render." });
+  if (!req.shapenUser?.email || !allowed.includes(req.shapenUser.email.toLowerCase())) {
+    return res.status(403).json({ error: "Acesso restrito à administração do SHAPEN." });
+  }
+  return next();
+}
+app.get("/api/admin/overview", authenticateSupabaseRequest, requireShapenAdmin, async (req, res) => {
+  try {
+    const cfg = req.shapenSupabase;
+    const [subscriptions, profiles] = await Promise.all([
+      supabaseAdminRequest(cfg, "shapen_subscriptions?select=id,user_id,plan,status,payment_method,provider,provider_subscription_id,provider_payment_id,current_period_end,created_at,cancelled_at,external_reference&order=created_at.desc&limit=1000"),
+      supabaseAdminRequest(cfg, "shapen_profiles?select=user_id,display_name&limit=1000")
+    ]);
+    const profileByUser = new Map((Array.isArray(profiles) ? profiles : []).map(p => [p.user_id, p.display_name]));
+    const all = Array.isArray(subscriptions) ? subscriptions : [];
+    const now = Date.now();
+    const activeStatuses = new Set(["active", "authorized"]);
+    const active = all.filter(s => {
+      const end = s.current_period_end ? new Date(s.current_period_end).getTime() : null;
+      return (activeStatuses.has(String(s.status).toLowerCase()) || (String(s.status).toLowerCase() === "cancelled" && end && end > now)) && (!end || end > now);
+    });
+    const amount = { basico: 24.90, premium: 59.90, ultimate: 99.90 };
+    const monthlyRevenue = active.reduce((sum, s) => sum + (amount[s.plan] || 0), 0);
+    const paid = all.filter(s => ["active", "authorized", "cancelled"].includes(String(s.status).toLowerCase()));
+    const recent = all.slice(0, 100).map(s => ({
+      id: s.id, userId: s.user_id, customer: profileByUser.get(s.user_id) || "Cliente SHAPEN",
+      plan: s.plan, status: s.status, paymentMethod: s.payment_method, provider: s.provider,
+      createdAt: s.created_at, currentPeriodEnd: s.current_period_end, cancelledAt: s.cancelled_at
+    }));
+    const users = new Set(all.map(s => s.user_id));
+    return res.json({
+      metrics: {
+        activeSubscribers: new Set(active.map(s => s.user_id)).size,
+        estimatedMonthlyRevenue: Math.round(monthlyRevenue * 100) / 100,
+        totalSubscriptions: all.length,
+        pendingPayments: all.filter(s => String(s.status).toLowerCase() === "pending").length,
+        cancelledSubscriptions: all.filter(s => String(s.status).toLowerCase() === "cancelled").length,
+        registeredPayingCustomers: users.size,
+        paidRecords: paid.length
+      },
+      plans: ["basico", "premium", "ultimate"].map(plan => ({
+        plan, active: new Set(active.filter(s => s.plan === plan).map(s => s.user_id)).size,
+        estimatedMonthlyRevenue: Math.round(active.filter(s => s.plan === plan).reduce((sum, s) => sum + (amount[s.plan] || 0), 0) * 100) / 100
+      })),
+      subscriptions: recent
+    });
+  } catch (error) {
+    console.error("SHAPEN admin overview failed:", error.message);
+    return res.status(502).json({ error: "Não foi possível carregar os dados administrativos. Verifique o schema do Supabase." });
+  }
+});
+
 app.get("/api/config", (_req, res) => {
   const cfg = supabaseConfig();
   return res.json({ supabaseUrl: cfg.url || null, supabasePublishableKey: cfg.publishableKey || null, authConfigured: Boolean(cfg.url && cfg.publishableKey && cfg.secretKey) });
