@@ -101,6 +101,7 @@
         <div class="auth-plan"><div><b>Ultimate</b><small>Diário por foto e ferramentas avançadas</small></div><strong>R$ 99,90<span>/mês</span></strong><button class="btn secondary" onclick="beginCheckout('ultimate')">Escolher Ultimate</button></div>
         <div class="formrow"><label class="label" for="authPaymentMethod">Forma de pagamento</label><select id="authPaymentMethod" class="field"><option value="card">Cartão de crédito — mensal recorrente</option><option value="pix">Pix — pagamento de um mês</option></select></div>
         <p class="auth-message" id="checkoutMessage" aria-live="polite"></p>
+        <button class="btn secondary hide" id="verifyPaymentBtn" type="button" onclick="verifyPaymentStatus()">Já paguei — verificar acesso</button>
         <button class="btn ghost" onclick="authSignOut()">Sair da conta</button>
       </div>
       <div id="authSetupMissing" class="notice hide"><b>Configuração pendente</b><p>O cadastro seguro ainda depende de conectar o projeto Supabase ao Render. Nenhum dado foi enviado.</p></div>
@@ -531,6 +532,7 @@ async function refreshShapenAccess(){
   if(freeNotice)freeNotice.classList.toggle('hide',plan!=='gratis');
   if((paymentReturn==='success'||paymentReturn==='pending'||subscriptionReturn==='return')&&plan==='gratis'){
    showSubscriptionPlans();
+   $('verifyPaymentBtn')?.classList.remove('hide');
    $('checkoutMessage').textContent=paymentReturn==='success'?'Pagamento retornou como aprovado. Estamos aguardando a confirmação segura do Mercado Pago; se o plano não liberar em alguns instantes, atualize esta página.':paymentReturn==='pending'?'Pagamento pendente. Assim que o Mercado Pago confirmar, seu acesso será liberado.':'Retorno do checkout recebido. Estamos verificando a confirmação da assinatura.';
    return;
   }
@@ -560,6 +562,19 @@ $('authForm').addEventListener('submit',async e=>{
  finally{$('authSubmit').disabled=false;$('authSubmit').textContent=shapenAuthMode==='login'?'Entrar na minha conta':'Criar minha conta';}
 });
 async function authSignOut(){if(shapenSupabase)await shapenSupabase.auth.signOut();shapenSession=null;$('appShell').style.display='none';$('authGate').classList.remove('hide');setAuthMode('login');}
+async function verifyPaymentStatus(){
+ const btn=$('verifyPaymentBtn'),msg=$('checkoutMessage');
+ if(!shapenSession){msg.textContent='Entre na sua conta para verificar o pagamento.';return}
+ btn?.classList.add('hide');msg.textContent='Consultando a confirmação segura do Mercado Pago…';
+ try{
+  const r=await fetch('/api/me',{headers:{Authorization:'Bearer '+shapenSession.access_token}});
+  const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível consultar sua conta.');
+  const active=data.subscription&&['active','authorized'].includes(String(data.subscription.status).toLowerCase())&&(!data.subscription.current_period_end||new Date(data.subscription.current_period_end).getTime()>Date.now());
+  if(active){msg.textContent='Pagamento confirmado. Seu plano '+String(data.subscription.plan).toUpperCase()+' está ativo.';await refreshShapenAccess();return}
+  msg.textContent='Ainda não recebemos a confirmação do pagamento. Aguarde alguns instantes e tente novamente.';
+  btn?.classList.remove('hide');
+ }catch(e){msg.textContent=e.message||'Não foi possível verificar agora.';btn?.classList.remove('hide')}
+}
 function showSubscriptionPlans(){
  $('appShell').style.display='none';$('authGate').classList.remove('hide');
  $('authForms').classList.add('hide');$('authSetupMissing').classList.add('hide');$('subscriptionGate').classList.remove('hide');
