@@ -23,7 +23,7 @@
 <section class="grid">
 <div class="metric"><div class="name">Receita mensal estimada</div><div id="revenue" class="num">—</div><div class="foot">Planos ativos × preço de tabela</div></div>
 <div class="metric"><div class="name">Assinantes ativos</div><div id="active" class="num">—</div><div class="foot">Clientes com acesso vigente</div></div>
-<div class="metric"><div class="name">Pagamentos pendentes</div><div id="pending" class="num">—</div><div class="foot">Precisam de acompanhamento</div></div>
+<div class="metric"><div class="name">Pagamentos pendentes</div><div id="pending" class="num">—</div><div class="foot" id="pendingFoot">Aguardando confirmação do provedor</div></div>
 <div class="metric"><div class="name">Cancelamentos</div><div id="cancelled" class="num">—</div><div class="foot">Registros de assinatura cancelada</div></div>
 </section>
 <section class="columns">
@@ -62,7 +62,7 @@ $("dashboard").prepend(toast);setTimeout(()=>toast.remove(),12000);
 seenStatuses[s.id]=s.status;
 }
 }
-function render(data){notifyPaidSubscriptions(data);const m=data.metrics||{};$("revenue").textContent=money(m.estimatedMonthlyRevenue);$("active").textContent=m.activeSubscribers??0;$("pending").textContent=m.pendingPayments??0;$("cancelled").textContent=m.cancelledSubscriptions??0;
+function render(data){notifyPaidSubscriptions(data);const m=data.metrics||{};$("revenue").textContent=money(m.estimatedMonthlyRevenue);$("active").textContent=m.activeSubscribers??0;$("pending").textContent=m.pendingPayments??0;$("pendingFoot").textContent=(m.stalePendingAttempts??0)+" tentativa(s) sem confirmação há mais de 24h; aparecem como expiradas apenas neste painel."; $("cancelled").textContent=m.cancelledSubscriptions??0;
 const rows=data.subscriptions||[];$("rows").innerHTML=rows.map(s=>'<tr><td>'+escapeHtml(s.customer)+'<div class="muted small">'+escapeHtml(s.email||"E-mail indisponível")+'…</div></td><td>'+escapeHtml((s.plan||"—").toUpperCase())+'</td><td><span class="status '+escapeHtml(s.status)+'">'+escapeHtml(s.status)+'</span></td><td>'+escapeHtml(s.paymentMethod||"—")+'</td><td>'+escapeHtml(date(s.createdAt))+'</td></tr>').join("");$("tableEmpty").classList.toggle("hidden",rows.length>0);
 const plans=data.plans||[];const max=Math.max(1,...plans.map(p=>Number(p.active||0)));$("plans").innerHTML=plans.map(p=>'<div class="plan"><div><strong>'+escapeHtml(p.plan)+'</strong><small>'+Number(p.active||0)+' assinante(s)</small><div class="bar"><i style="width:'+Math.min(100,Number(p.active||0)/max*100)+'%"></i></div></div><b>'+money(p.estimatedMonthlyRevenue)+'/mês</b></div>').join("");
 $("updated").textContent="Atualizado em "+new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short"}).format(new Date());}
