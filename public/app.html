@@ -1,0 +1,582 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#100c19">
+<title>SHAPEN — Fitness inteligente, feito para você</title>
+<style>
+:root{--bg:#241633;--panel:#302044;--panel2:#3b2852;--line:#5b4274;--text:#f7f0ff;--muted:#cbb9df;--lime:#c2a0ff;--lime2:#9560ed;--red:#ff9d8d;--radius:20px}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 85% -10%,#68438b 0,transparent 38%),var(--bg);color:var(--text);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}button,input,select,textarea{font:inherit}button{cursor:pointer}.shell{max-width:1180px;margin:auto;padding:22px}.top{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:8px 0 22px;border-bottom:1px solid var(--line)}.brand{display:flex;gap:12px;align-items:center}.mark{width:44px;height:44px;border-radius:13px;background:linear-gradient(145deg,#9b68e8,#6540a4);color:#fff;display:grid;place-items:center;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-weight:700;font-size:29px;letter-spacing:-2px;box-shadow:0 5px 18px #8d5bd833;border:1px solid #bda0ef55}.brandname{font-family:'Trebuchet MS',Arial,sans-serif;font-size:21px;font-weight:800;letter-spacing:-1.1px}.brandname span{color:var(--lime)}.tag{color:var(--muted);font-size:11px;letter-spacing:1.8px;text-transform:uppercase}.status{border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:12px}.layout{display:grid;grid-template-columns:235px minmax(0,1fr);gap:24px;padding-top:24px}.side{display:flex;flex-direction:column;gap:7px}.nav{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid transparent;border-radius:13px;background:transparent;color:var(--muted);text-align:left}.nav.active,.nav:hover{background:var(--panel2);border-color:var(--line);color:var(--text)}.nav.active .ico{color:var(--lime)}.ico{width:20px;text-align:center;font-size:17px}.side-note{margin-top:22px;padding:16px;background:var(--panel);border:1px solid var(--line);border-radius:16px;color:var(--muted);font-size:12px}.side-note b{display:block;color:var(--text);margin-bottom:6px}.main{min-width:0}.page{display:none}.page.active{display:block}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--lime);font-weight:800}.headline{font-size:clamp(28px,4vw,42px);line-height:1.05;letter-spacing:-1.6px;margin:8px 0 12px}.sub{color:var(--muted);max-width:700px;margin:0 0 22px}.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}.card{background:linear-gradient(150deg,#3b2852,#302044);border:1px solid var(--line);border-radius:var(--radius);padding:20px;min-width:0}.span12{grid-column:span 12}.span8{grid-column:span 8}.span7{grid-column:span 7}.span6{grid-column:span 6}.span5{grid-column:span 5}.span4{grid-column:span 4}.card h2,.card h3{margin:0 0 8px;letter-spacing:-.4px}.card h2{font-size:21px}.card h3{font-size:16px}.muted{color:var(--muted)}.small{font-size:12px}.metric{font-size:30px;font-weight:850;letter-spacing:-1px}.metric span{font-size:13px;color:var(--muted);font-weight:500;letter-spacing:0}.row{display:flex;align-items:center;justify-content:space-between;gap:12px}.stack{display:flex;flex-direction:column;gap:12px}.btn{border:0;border-radius:12px;padding:12px 16px;background:var(--lime);color:#241633;font-weight:800;transition:.15s}.btn:hover{background:#d1c2ff;transform:translateY(-1px)}.btn.secondary{background:var(--panel2);border:1px solid var(--line);color:var(--text)}.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}.btn.danger{background:#3a201d;color:#ffc4b9;border:1px solid #65332c}.btn:disabled{opacity:.4;cursor:not-allowed;transform:none}.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.bar{height:7px;background:#4a3462;border-radius:99px;overflow:hidden}.bar>i{display:block;height:100%;width:0;background:var(--lime);border-radius:99px;transition:width .2s}.label{font-size:12px;color:var(--muted);display:block;margin-bottom:6px}.field{width:100%;background:#2a1c39;border:1px solid #6a4c84;border-radius:11px;padding:12px 13px;color:var(--text);outline:none}.field:focus{border-color:var(--lime);box-shadow:0 0 0 3px #b69cff22}.formgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.formrow{margin-bottom:14px}.choicegrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.choice{display:flex;align-items:flex-start;gap:10px;text-align:left;background:#302044;border:1px solid var(--line);border-radius:13px;padding:13px;color:var(--text);min-height:66px}.choice.selected{border-color:var(--lime);background:#493260}.choice input{accent-color:var(--lime);margin-top:4px}.choice b{display:block;font-size:14px}.choice small{display:block;color:var(--muted);font-size:12px;margin-top:3px}.stephead{display:flex;align-items:center;gap:14px;margin-bottom:20px}.stepnum{display:grid;place-items:center;width:38px;height:38px;background:var(--lime);color:#241633;border-radius:12px;font-weight:900}.step-progress{flex:1}.step-progress .row{margin-bottom:7px}.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;font-size:11px;color:var(--muted)}.chip.lime{border-color:#8d65b8;color:var(--lime);background:#b69cff12}.exercise{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.exercise:last-child{border-bottom:0}.exercise strong{display:block;font-size:14px}.exercise small{color:var(--muted)}.altselect{max-width:170px;background:#302044;color:var(--text);border:1px solid var(--line);border-radius:9px;padding:9px;font-size:12px}.checkline{display:flex;gap:10px;align-items:flex-start;padding:12px 0;border-bottom:1px solid var(--line)}.checkline:last-child{border-bottom:0}.checkline input{accent-color:var(--lime);margin-top:5px}.checkline.done strong{text-decoration:line-through;color:var(--muted)}.foodrow{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.foodrow:last-child{border-bottom:0}.foodicon{width:40px;height:40px;border-radius:12px;background:#4a3265;display:grid;place-items:center;font-size:19px;flex-shrink:0}.foodrow strong{font-size:14px}.foodrow small{display:block;color:var(--muted);font-size:12px}.chatbox{height:310px;overflow:auto;display:flex;flex-direction:column;gap:10px;padding:4px 0}.bubble{max-width:88%;padding:12px 14px;border-radius:14px;background:var(--panel2);border:1px solid var(--line);font-size:14px;white-space:pre-wrap}.bubble.user{align-self:flex-end;background:#4b3265;border-color:#80609d}.chatform{display:flex;gap:8px}.chatform input{flex:1;min-width:0}.notice{padding:13px 15px;border:1px solid #635039;background:#292016;border-radius:12px;color:#e2cba5;font-size:12px}.good{color:var(--lime)}.bigcta{background:var(--lime);color:#241633;border-radius:18px;padding:23px;display:flex;align-items:center;justify-content:space-between;gap:15px}.bigcta h2{margin:0 0 5px;font-size:24px;letter-spacing:-.8px}.bigcta p{margin:0;color:#5a4274;font-size:13px}.bigcta .btn{background:#241633;color:var(--lime)}.empty{padding:35px 20px;text-align:center}.empty .emoji{font-size:35px}.pilltabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:15px}.pilltab{background:transparent;border:1px solid var(--line);border-radius:999px;padding:8px 12px;color:var(--muted);font-size:12px}.pilltab.active{background:var(--lime);border-color:var(--lime);color:#241633;font-weight:800}.hide{display:none!important}.footer{margin:28px 0 10px;color:#8b819d;font-size:11px;text-align:center}.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--lime);color:#241633;padding:12px 18px;border-radius:12px;font-weight:800;box-shadow:0 12px 40px #0008;z-index:99}
+
+.meal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:16px}
+.meal-card{overflow:hidden;padding:0;background:#302044;border:1px solid var(--line);border-radius:18px;min-width:0}
+.meal-photo{height:170px;position:relative;background:linear-gradient(135deg,#654783,#302044);overflow:hidden}
+.meal-photo img{width:100%;height:100%;display:block;object-fit:cover}
+.meal-photo .meal-photo-label{position:absolute;left:12px;bottom:12px;padding:6px 10px;border-radius:999px;background:#170f20dd;color:#fff;font-size:11px;font-weight:800}
+.meal-body{padding:16px}
+.meal-body h3{margin:0 0 7px;font-size:17px}
+.meal-body p{margin:0 0 10px;font-size:13px;color:var(--muted)}
+.meal-alt{border-top:1px solid var(--line);padding-top:10px;font-size:12px;color:var(--lime)}
+.nutrition-hero{padding:22px;background:linear-gradient(125deg,#493260,#302044);border:1px solid var(--line);border-radius:20px;margin-bottom:16px}
+.nutrition-hero h2{font-size:23px;margin:4px 0 6px}
+.nutrition-hero p{margin:0;color:var(--muted);font-size:13px}
+.nutrition-section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:22px 0 8px}
+.nutrition-section-title h2{margin:0;font-size:21px}
+@media(max-width:620px){.meal-grid{grid-template-columns:1fr}.meal-photo{height:200px}}
+@media(max-width:800px){.shell{padding:15px}.layout{grid-template-columns:1fr;gap:16px}.side{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}.nav{justify-content:center;flex-direction:column;gap:4px;padding:9px 4px;font-size:10px}.side-note{display:none}.span8,.span7,.span6,.span5,.span4{grid-column:span 12}.headline{font-size:32px}.status{display:none}.card{padding:16px}.bigcta{align-items:flex-start;flex-direction:column}}
+@media(max-width:480px){.formgrid,.choicegrid{grid-template-columns:1fr}.exercise{grid-template-columns:1fr}.altselect{max-width:none;width:100%}.brandname{font-size:18px}}
+
+.plans-note{display:flex;gap:13px;align-items:flex-start;background:#302044;border:1px solid var(--line);border-radius:15px;padding:15px;margin:0 0 18px}
+.plans-note-icon{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:11px;background:#4b3265;color:var(--lime);font-size:19px}
+.plans-note strong{display:block;font-size:14px}
+.plans-note p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.plans-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:stretch}
+.plan-card{position:relative;padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(155deg,#39274d,#2b1d39);min-width:0}
+.plan-card-premium{border-color:#b69cff;box-shadow:0 0 0 1px #b69cff22}\n.plan-card-ultimate{border-color:#d7b56d;box-shadow:0 0 0 1px #d7b56d22}\n.plan-card-ultimate .plan-symbol{background:#4a3b2b;color:#f2d28b}\n.plan-card-ultimate .plan-label{color:#f2d28b}
+.plan-popular{position:absolute;top:-11px;right:18px;background:var(--lime);color:#241633;border-radius:999px;padding:5px 10px;font-size:10px;font-weight:900;letter-spacing:.7px}
+.plan-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}
+.plan-label{font-size:10px;font-weight:850;letter-spacing:1.6px;color:var(--muted)}
+.plan-symbol{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#4a3265;color:var(--lime);font-size:20px}
+.plan-card h2{font-size:26px;margin:0 0 6px}
+.plan-description{min-height:42px;margin:0;color:var(--muted);font-size:13px}
+.plan-price{display:flex;align-items:baseline;gap:7px;margin-top:22px}
+.plan-price strong{font-size:34px;letter-spacing:-1.5px}
+.plan-price span{font-size:13px;color:var(--muted)}
+.plan-billing{font-size:11px;color:var(--muted);margin:0 0 17px}
+.plan-button{width:100%;margin-bottom:5px}
+.plan-divider{height:1px;background:var(--line);margin:18px 0}
+.plan-includes{font-size:12px;font-weight:850;margin:0 0 12px}
+.plan-features{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+.plan-features li{display:flex;gap:10px;font-size:13px;line-height:1.4}
+.plan-features li>span{color:var(--lime);font-weight:900;flex-shrink:0}
+.plan-features .feature-muted{color:#a99ab8}
+.plan-features .feature-muted>span{color:#a99ab8}
+.plan-selection{margin-top:16px}
+.plan-selection h3{margin:0 0 5px}
+.plan-selection p{margin:0}
+.plan-disclaimer{font-size:11px;line-height:1.5;color:var(--muted);margin:14px 2px}
+@media(max-width:980px){.plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}\n@media(max-width:700px){.plans-grid{grid-template-columns:1fr}.plan-description{min-height:0}.plan-card{padding:21px}}
+
+.auth-gate{max-width:1160px;margin:0 auto;padding:28px 22px 18px;min-height:100vh}
+.auth-brand{display:flex;align-items:center;gap:12px;margin:0 0 38px}
+.auth-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.8fr);gap:56px;align-items:center;min-height:calc(100vh - 150px)}
+.auth-story h1{font-size:clamp(38px,6vw,68px);line-height:.99;letter-spacing:-3px;margin:14px 0 20px}.auth-story h1 span{color:var(--lime)}
+.auth-story>p{max-width:480px;color:var(--muted);font-size:17px;margin:0 0 30px}
+.auth-benefit{display:flex;gap:14px;align-items:flex-start;margin:18px 0}.auth-benefit>span{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:13px;background:#4b3265;color:var(--lime);font-size:19px}.auth-benefit b,.auth-benefit small{display:block}.auth-benefit small{color:var(--muted);margin-top:3px}
+.auth-panel{background:linear-gradient(155deg,#38264c,#281b35);border:1px solid var(--line);border-radius:25px;padding:28px;box-shadow:0 25px 70px #10091666}.auth-panel h2{font-size:25px;letter-spacing:-.8px;margin:8px 0 4px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#21162c;padding:5px;border-radius:13px;margin-bottom:22px}.auth-tab{border:0;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:800}.auth-tab.active{background:#4a3265;color:var(--text)}.auth-submit{width:100%;margin-top:6px}.auth-message{min-height:20px;color:var(--lime);font-size:12px;margin:12px 0}.auth-legal,.auth-footer{font-size:11px;color:#a99ab8;line-height:1.6}.auth-footer{text-align:center;margin-top:28px}.auth-plan{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.auth-plan b,.auth-plan small{display:block}.auth-plan small{color:var(--muted);font-size:11px}.auth-plan strong{font-size:16px;white-space:nowrap}.auth-plan strong span{font-size:10px;color:var(--muted);font-weight:400}.auth-plan button{grid-column:1/-1;width:100%;padding:9px}.auth-plan.featured{background:#4b326522;border:1px solid #9c7ec4;border-radius:13px;padding:13px;margin:8px -4px}.auth-plan:last-of-type{margin-bottom:12px}
+@media(max-width:800px){.auth-grid{grid-template-columns:1fr;gap:25px;min-height:auto}.auth-story h1{font-size:42px;letter-spacing:-2px}.auth-story>p{font-size:14px}.auth-brand{margin-bottom:26px}.auth-panel{padding:21px}.auth-gate{padding:18px 15px}.auth-story .auth-benefit{margin:12px 0}}
+
+</style>
+</head>
+<body>
+
+<section id="authGate" class="auth-gate">
+  <div class="auth-brand"><div class="mark">s</div><div><div class="brandname">SHAPEN</div><div class="tag">fitness inteligente, feito para você</div></div></div>
+  <div class="auth-grid">
+    <div class="auth-story">
+      <div class="eyebrow">SEU PRÓXIMO NÍVEL COMEÇA AQUI</div>
+      <h1>Treino e nutrição.<br><span>Do seu jeito.</span></h1>
+      <p>Uma rotina que acompanha sua vida, com ferramentas inteligentes para ajudar você a manter consistência.</p>
+      <div class="auth-benefit"><span>✦</span><div><b>Personalizado para sua rotina</b><small>Estruture seus treinos e refeições com mais clareza.</small></div></div>
+      <div class="auth-benefit"><span>◈</span><div><b>Seu progresso em um só lugar</b><small>Guarde sua evolução vinculada à sua conta.</small></div></div>
+      <div class="auth-benefit"><span>↗</span><div><b>Ferramentas para cada etapa</b><small>Escolha o plano que combina com seu objetivo.</small></div></div>
+    </div>
+    <div class="auth-panel">
+      <div id="authForms">
+        <div class="auth-tabs"><button type="button" class="auth-tab active" id="loginTab" onclick="setAuthMode('login')">Entrar</button><button type="button" class="auth-tab" id="signupTab" onclick="setAuthMode('signup')">Criar conta</button></div>
+        <h2 id="authTitle">Bem-vindo de volta</h2><p id="authSubtitle" class="muted small">Entre para continuar sua jornada no SHAPEN.</p>
+        <form id="authForm">
+          <div class="formrow"><label class="label" for="authEmail">E-mail</label><input class="field" id="authEmail" type="email" autocomplete="email" placeholder="voce@email.com" required maxlength="160"></div>
+          <div class="formrow"><label class="label" for="authPassword">Senha</label><input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Pelo menos 8 caracteres" required minlength="8" maxlength="128"></div>
+          <div class="formrow hide" id="authConfirmWrap"><label class="label" for="authConfirm">Confirmar senha</label><input class="field" id="authConfirm" type="password" autocomplete="new-password" placeholder="Digite a senha novamente" minlength="8" maxlength="128"></div>
+          <button class="btn auth-submit" id="authSubmit" type="submit">Entrar na minha conta</button>
+        </form>
+        <p class="auth-message" id="authMessage" aria-live="polite"></p>
+        <p class="auth-legal">Ao continuar, você concorda em usar o SHAPEN como ferramenta educativa de bem-estar. Não substitui orientação profissional de saúde.</p>
+      </div>
+      <div id="subscriptionGate" class="hide">
+        <div class="eyebrow">ESCOLHA SEU ACESSO</div><h2>Seu plano, seu ritmo.</h2><p class="muted small">Escolha um plano para continuar. As ferramentas serão liberadas após a confirmação da assinatura.</p>
+        <div class="auth-plan"><div><b>Básico</b><small>Treino, refeições e progresso básico</small></div><strong>R$ 24,90<span>/mês</span></strong><button class="btn secondary" onclick="beginCheckout('basico')">Escolher Básico</button></div>
+        <div class="auth-plan featured"><div><b>Premium</b><small>Copiloto e adaptações com IA</small></div><strong>R$ 59,90<span>/mês</span></strong><button class="btn" onclick="beginCheckout('premium')">Escolher Premium</button></div>
+        <div class="auth-plan"><div><b>Ultimate</b><small>Diário por foto e ferramentas avançadas</small></div><strong>R$ 99,90<span>/mês</span></strong><button class="btn secondary" onclick="beginCheckout('ultimate')">Escolher Ultimate</button></div>
+        <div class="formrow"><label class="label" for="authPaymentMethod">Forma de pagamento</label><select id="authPaymentMethod" class="field"><option value="card">Cartão de crédito — mensal recorrente</option><option value="pix">Pix — pagamento de um mês</option></select></div>
+        <p class="auth-message" id="checkoutMessage" aria-live="polite"></p>
+        <button class="btn ghost" onclick="authSignOut()">Sair da conta</button>
+      </div>
+      <div id="authSetupMissing" class="notice hide"><b>Configuração pendente</b><p>O cadastro seguro ainda depende de conectar o projeto Supabase ao Render. Nenhum dado foi enviado.</p></div>
+    </div>
+  </div>
+  <div class="auth-footer">SHAPEN · Seu espaço de evolução</div>
+</section>
+
+<div class="shell" id="appShell" style="display:none">
+<header class="top">
+ <div class="brand"><div class="mark">s</div><div><div class="brandname">SHAPEN</div><div class="tag">fitness inteligente, feito para você</div></div></div>
+ <div class="status" id="topStatus">● MODO DEMONSTRAÇÃO</div>
+</header>
+<div id="freePlanNotice" class="card span12" style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><b>Você está no SHAPEN Grátis</b><div class="muted small">Explore a interface e conheça o aplicativo antes de assinar. Quando quiser mais recursos, veja os planos pagos.</div></div><button class="btn" onclick="showSubscriptionPlans()">Conhecer planos</button></div>
+<div class="layout">
+<aside class="side">
+ <button class="nav active" data-page="home"><span class="ico">◫</span>Visão geral</button>
+ <button class="nav" data-page="setup"><span class="ico">◎</span>Meu plano</button>
+ <button class="nav" data-page="workout"><span class="ico">↗</span>Treino</button>
+ <button class="nav" data-page="nutrition"><span class="ico">◉</span>Nutrição</button>
+ <button class="nav" data-page="progress"><span class="ico">↗</span>Evolução</button>
+ <button class="nav" data-page="coach"><span class="ico">✳</span>Copiloto</button>
+ <button class="nav" data-page="plans"><span class="ico">♢</span>Assinaturas</button>
+ <div class="side-note"><b>Seu plano muda com você.</b>Pequenas decisões consistentes. Progresso que dá para acompanhar.</div>
+</aside>
+<main class="main">
+<section class="page active" id="page-home">
+ <div class="eyebrow">Seu espaço de evolução</div><h1 class="headline" id="welcome">Menos adivinhação.<br>Mais direção.</h1>
+ <p class="sub" id="homeSub">Monte seu perfil em etapas e receba uma estrutura inicial de treino e alimentação alinhada ao seu objetivo.</p>
+ <div class="bigcta" id="homeCta"><div><h2>Seu plano começa aqui.</h2><p>Leva cerca de 2 minutos para configurar.</p></div><button class="btn" onclick="showPage('setup')">Montar meu plano →</button></div>
+ <div class="grid" style="margin-top:15px">
+  <div class="card span4"><div class="muted small">OBJETIVO ATUAL</div><div class="metric" id="metricGoal">—</div><div class="muted small">Personalizado no seu perfil</div></div>
+  <div class="card span4"><div class="muted small">SESSÕES / SEMANA</div><div class="metric" id="metricDays">—</div><div class="muted small">Planejadas para sua rotina</div></div>
+  <div class="card span4"><div class="muted small">CONSISTÊNCIA</div><div class="metric" id="metricConsistency">0<span> tarefas</span></div><div class="muted small">Concluídas neste dispositivo</div></div>
+  <div class="card span7"><div class="row"><div><h2>Hoje, no seu ritmo</h2><div class="muted small" id="todayLabel">Seu plano diário</div></div><span class="chip lime">AÇÃO DO DIA</span></div><div id="todayTasks" class="stack" style="margin-top:12px"><div class="muted">Monte seu plano para ver as tarefas sugeridas.</div></div></div>
+  <div class="card span5"><h2>Seu norte</h2><p class="muted small">Uma boa estratégia não exige perfeição. Ela oferece opções quando a rotina muda.</p><div class="stack"><div class="row"><span class="muted small">Treino</span><b id="miniWorkout">A configurar</b></div><div class="row"><span class="muted small">Nutrição</span><b id="miniFood">A configurar</b></div><div class="row"><span class="muted small">Próximo passo</span><b>Começar simples</b></div></div><button class="btn secondary" style="width:100%;margin-top:17px" onclick="showPage('workout')">Ver meu treino</button></div>
+ </div>
+</section>
+<section class="page" id="page-setup">
+ <div class="eyebrow">Configuração guiada</div><h1 class="headline">Um plano feito<br>para sua vida.</h1><p class="sub">Conte o essencial. O SHAPEN usa essas informações para montar uma estrutura inicial e oferecer alternativas quando o plano ideal não couber no seu dia.</p>
+ <div class="card">
+  <div class="stephead"><div class="stepnum" id="stepNumber">1</div><div class="step-progress" style="flex:1"><div class="row"><b id="stepTitle">Seu objetivo</b><span class="muted small" id="stepCount">Etapa 1 de 5</span></div><div class="bar"><i id="stepBar" style="width:20%"></i></div></div></div>
+  <form id="profileForm" onsubmit="return false">
+   <div class="wizard" data-step="0">
+    <h2>O que você quer conquistar?</h2><p class="muted small">Escolha uma prioridade para orientar o plano. Você poderá revisar depois.</p>
+    <div class="choicegrid">
+     <label class="choice"><input type="radio" name="goal" value="muscle" checked><span><b>Ganhar massa muscular</b><small>Hipertrofia e força</small></span></label>
+     <label class="choice"><input type="radio" name="goal" value="fat"><span><b>Reduzir gordura</b><small>Hábitos e composição corporal</small></span></label>
+     <label class="choice"><input type="radio" name="goal" value="fitness"><span><b>Condicionamento</b><small>Energia e resistência</small></span></label>
+     <label class="choice"><input type="radio" name="goal" value="recomp"><span><b>Recomposição corporal</b><small>Força e hábitos alimentares</small></span></label>
+    </div>
+    <div class="formgrid" style="margin-top:18px">
+     <div class="formrow"><label class="label" for="name">Como podemos te chamar?</label><input class="field" id="name" placeholder="Seu nome (opcional)" maxlength="40"></div>
+     <div class="formrow"><label class="label" for="target">Meta principal (opcional)</label><input class="field" id="target" placeholder="Ex.: fazer 3 treinos/semana" maxlength="90"></div>
+    </div>
+   </div>
+   <div class="wizard hide" data-step="1">
+    <h2>Seu ponto de partida</h2><p class="muted small">Use medidas aproximadas e atuais. Peso e altura ajudam a contextualizar, mas não determinam sozinhos suas necessidades.</p>
+    <div class="formgrid">
+     <div class="formrow"><label class="label" for="age">Idade</label><input class="field" id="age" type="number" min="18" max="100" placeholder="Ex.: 28" required></div>
+     <div class="formrow"><label class="label" for="sex">Referência para estimativa energética</label><select class="field" id="sex"><option value="f">Feminina</option><option value="m">Masculina</option><option value="x">Prefiro não informar</option></select></div>
+     <div class="formrow"><label class="label" for="weight">Peso atual (kg)</label><input class="field" id="weight" type="number" min="30" max="300" step=".1" placeholder="Ex.: 73" required></div>
+     <div class="formrow"><label class="label" for="height">Altura (cm)</label><input class="field" id="height" type="number" min="120" max="230" placeholder="Ex.: 181" required></div>
+    </div>
+    <div class="formrow"><label class="label" for="activity">Atividade fora dos treinos</label><select class="field" id="activity"><option value="1.2">Mais sentado(a) na maior parte do dia</option><option value="1.375" selected>Levemente ativo(a), caminhadas e rotina normal</option><option value="1.55">Ativo(a), passa bastante tempo em pé</option><option value="1.725">Muito ativo(a), trabalho físico ou muita movimentação</option></select></div>
+   </div>
+   <div class="wizard hide" data-step="2">
+    <h2>Como você gosta de treinar?</h2><p class="muted small">Vamos adaptar frequência, duração e equipamentos à sua realidade.</p>
+    <div class="formgrid">
+     <div class="formrow"><label class="label" for="experience">Experiência</label><select class="field" id="experience"><option value="beginner">Iniciante / voltando agora</option><option value="intermediate" selected>Intermediário</option><option value="advanced">Avançado</option></select></div>
+     <div class="formrow"><label class="label" for="days">Dias por semana</label><select class="field" id="days"><option value="2">2 dias</option><option value="3" selected>3 dias</option><option value="4">4 dias</option><option value="5">5 dias</option><option value="6">6 dias</option></select></div>
+     <div class="formrow"><label class="label" for="duration">Tempo por sessão</label><select class="field" id="duration"><option value="20">20 minutos</option><option value="30" selected>30 minutos</option><option value="45">45 minutos</option><option value="60">60 minutos</option></select></div>
+     <div class="formrow"><label class="label" for="equipment">Onde treina?</label><select class="field" id="equipment"><option value="gym" selected>Academia completa</option><option value="home">Em casa, sem equipamentos</option><option value="dumbbells">Em casa, com halteres/elásticos</option><option value="outdoor">Ao ar livre / parque</option></select></div>
+    </div>
+    <div class="formrow"><label class="label" for="cardio">Cardio que prefere</label><select class="field" id="cardio"><option value="walk">Caminhada</option><option value="run" selected>Corrida</option><option value="bike">Bicicleta</option><option value="none">Prefiro focar na musculação</option></select></div>
+   </div>
+   <div class="wizard hide" data-step="3">
+    <h2>Alimentação que funciona para você</h2><p class="muted small">Preferências ajudam a sugerir opções realistas. Isso não substitui uma dieta clínica individualizada.</p>
+    <div class="formgrid">
+     <div class="formrow"><label class="label" for="diet">Estilo alimentar</label><select class="field" id="diet"><option value="mixed">Sem restrição específica</option><option value="vegetarian">Vegetariano(a)</option><option value="vegan">Vegano(a)</option><option value="pesc">Pescetariano(a)</option></select></div>
+     <div class="formrow"><label class="label" for="meals">Refeições que prefere por dia</label><select class="field" id="meals"><option value="3">3 refeições</option><option value="4" selected>4 refeições</option><option value="5">5 refeições</option></select></div>
+     <div class="formrow"><label class="label" for="budget">Orçamento para comida</label><select class="field" id="budget"><option value="economy">Econômico</option><option value="balanced" selected>Moderado</option><option value="flex">Flexível</option></select></div>
+     <div class="formrow"><label class="label" for="cooking">Tempo para cozinhar</label><select class="field" id="cooking"><option value="low">Quase nenhum</option><option value="medium" selected>Até 30 min/dia</option><option value="high">Gosto de cozinhar</option></select></div>
+    </div>
+    <div class="formrow"><label class="label" for="avoid">Alergias, intolerâncias ou alimentos que evita (opcional)</label><input class="field" id="avoid" placeholder="Ex.: amendoim, lactose, não gosto de peixe" maxlength="180"></div>
+   </div>
+   <div class="wizard hide" data-step="4">
+    <h2>Segurança antes de começar</h2><p class="muted small">Queremos evitar sugerir algo incompatível com sua condição atual.</p>
+    <div class="formrow"><label class="label" for="limitations">Lesões, dores ou limitações físicas (opcional)</label><textarea class="field" id="limitations" rows="3" placeholder="Ex.: desconforto no joelho ao correr, dor no ombro..." maxlength="300"></textarea></div>
+    <div class="formrow"><label class="label" for="conditions">Condições de saúde ou orientação profissional relevante (opcional)</label><textarea class="field" id="conditions" rows="2" placeholder="Informe apenas o necessário. Não compartilhe dados que não queira registrar." maxlength="300"></textarea></div>
+    <label class="choice" style="margin-bottom:10px"><input id="riskCheck" type="checkbox"><span><b>Confirmo que posso praticar atividade física</b><small>Se tiver sintomas, condição clínica, lesão ou dúvida sobre segurança, vou procurar um profissional antes de iniciar.</small></span></label>
+    <label class="choice"><input id="termsCheck" type="checkbox"><span><b>Entendi os limites do plano</b><small>As recomendações são informativas, não diagnóstico, prescrição clínica nem substituto de nutricionista, médico ou profissional de educação física.</small></span></label>
+    <div class="notice" style="margin-top:15px">Este protótipo não faz triagem médica completa. Se você tem doença crônica, está grávida, tem histórico de transtorno alimentar, dor persistente ou toma medicação que afeta exercício/apetite, procure orientação profissional antes de seguir metas de treino ou energia.</div>
+   </div>
+   <div class="actions"><button type="button" class="btn secondary" id="prevBtn" onclick="prevStep()" disabled>← Voltar</button><button type="button" class="btn" id="nextBtn" onclick="nextStep()">Continuar →</button><button type="button" class="btn hide" id="generateBtn" onclick="generatePlan()">Criar meu plano ↗</button></div>
+  </form>
+ </div>
+</section>
+<section class="page" id="page-workout">
+ <div class="eyebrow">Treino adaptável</div><h1 class="headline">Faça o que cabe<br>no seu dia.</h1><p class="sub">Estrutura inicial montada a partir do seu perfil. Ajuste exercícios pelas alternativas disponíveis e marque o que concluiu.</p>
+ <div id="workoutContent"><div class="card empty"><div class="emoji">↗</div><h2>Seu treino começa com seu perfil</h2><p class="muted">Configure objetivo, experiência, disponibilidade e equipamentos.</p><button class="btn" onclick="showPage('setup')">Configurar perfil</button></div></div>
+</section>
+<section class="page" id="page-nutrition">
+ <div class="eyebrow">Nutrição flexível</div><h1 class="headline">Opções, não culpa.</h1><p class="sub">Sugestões gerais de refeições e estimativas educativas. Troque ingredientes e escolha o que combina com sua rotina.</p>
+ <div id="nutritionContent"><div class="card empty"><div class="emoji">◉</div><h2>Personalize suas sugestões</h2><button class="btn" onclick="showPage('setup')">Configurar perfil</button></div></div>
+<div class="card" data-plan-min="ultimate" style="margin-top:16px"><div class="eyebrow">ULTIMATE · DIÁRIO ALIMENTAR</div><h2>Registrar refeição por foto</h2><p class="muted small">A IA sugere alimentos e porções visíveis. Revise as estimativas antes de salvar; uma foto não permite precisão nutricional.</p><input id="foodPhotoInput" class="field" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"><div class="actions"><button class="btn" onclick="analyzeFoodPhoto()">Analisar refeição</button></div><div id="foodPhotoStatus" class="muted small" aria-live="polite"></div><div id="foodPhotoResult"></div><div id="foodJournal" class="stack"></div></div></section>
+<section class="page" id="page-progress"><div class="eyebrow">SHAPEN REAL LIFE</div><h1 class="headline">Sua evolução, de verdade.</h1><p class="sub">Registre treinos, medidas e perceba tendências sem buscar perfeição.</p><div class="grid"><div class="card span6"><h2>Registrar medidas</h2><p class="muted small">Dados salvos apenas neste navegador.</p><div class="formgrid"><div class="formrow"><label class="label" for="progressWeight">Peso (kg)</label><input class="field" id="progressWeight" type="number" min="25" max="350" step="0.1"></div><div class="formrow"><label class="label" for="progressWaist">Cintura (cm)</label><input class="field" id="progressWaist" type="number" min="30" max="250" step="0.1"></div><div class="formrow"><label class="label" for="progressHip">Quadril (cm)</label><input class="field" id="progressHip" type="number" min="30" max="250" step="0.1"></div><div class="formrow"><label class="label" for="progressNote">Nota</label><input class="field" id="progressNote" maxlength="180" placeholder="Energia, sono, dificuldades..."></div></div><label class="label" for="progressPhoto">Foto opcional</label><input class="field" id="progressPhoto" type="file" accept="image/*"><div class="actions"><button class="btn" onclick="saveProgress()">Salvar registro</button></div><p class="muted small">Fotos e medidas são sensíveis; registre somente o que desejar.</p></div><div class="card span6"><h2>Revisão semanal</h2><div id="weeklyReview" class="stack"><p class="muted">Registre treinos para gerar sua revisão.</p></div><div class="actions"><button class="btn secondary" onclick="buildWeeklyReview()">Atualizar</button><button class="btn ghost" onclick="speakWeeklyReview()">Ouvir resumo</button></div></div><div class="card span12"><div class="row"><div><h2>Linha do tempo</h2><p class="muted small">Treinos e medidas registrados.</p></div><button class="btn ghost" onclick="exportProgress()">Exportar dados</button></div><div id="progressTimeline" class="stack"><p class="muted">Seus registros aparecerão aqui.</p></div></div></div></section><section class="page" id="page-plans">
+ <div class="eyebrow">SHAPEN MEMBERSHIP</div>
+ <h1 class="headline">Escolha seu próximo nível.</h1>
+ <p class="sub">Comece com o essencial ou tenha mais ferramentas para manter sua evolução. Você pode mudar de plano quando quiser.</p>
+ <div class="plans-note"><span class="plans-note-icon">✦</span><div><strong>Pix ou cartão de crédito</strong><p>Escolha Pix para pagar um mês por vez, ou cartão de crédito para configurar a cobrança recorrente mensal. O checkout é processado com segurança pelo Mercado Pago.</p></div></div><div class="card" style="margin-bottom:16px"><label class="label" for="checkoutEmail">Seu e-mail</label><input class="field" id="checkoutEmail" type="email" autocomplete="email" placeholder="voce@email.com" maxlength="160"><label class="label" for="checkoutMethod" style="display:block;margin-top:12px">Forma de pagamento</label><select class="field" id="checkoutMethod"><option value="card">Cartão de crédito · cobrança mensal recorrente</option><option value="pix">Pix · pagamento de um mês por vez</option></select><p class="muted small">No Pix, será necessário realizar um novo pagamento a cada mês. No cartão, a recorrência depende da aprovação e disponibilidade do Mercado Pago.</p><div id="checkoutStatus" class="muted small" aria-live="polite"></div></div>
+ <div class="plans-grid">
+  <article class="plan-card">
+   <div class="plan-top"><span class="plan-label">PARA COMEÇAR</span><span class="plan-symbol">◉</span></div>
+   <h2>Básico</h2><p class="plan-description">Para criar uma rotina e organizar treino e alimentação.</p>
+   <div class="plan-price"><strong>R$ 24,90</strong><span>/ mês</span></div>
+   <p class="plan-billing">Cobrança mensal</p>
+   <button class="btn secondary plan-button" onclick="choosePlan('basico')">Escolher Básico</button>
+   <div class="plan-divider"></div>
+   <p class="plan-includes">O que está incluído</p>
+   <ul class="plan-features">
+    <li><span>✓</span>Plano inicial de treino personalizado</li>
+    <li><span>✓</span>Sugestões de refeições e alternativas</li>
+    <li><span>✓</span>Lista de compras básica</li>
+    <li><span>✓</span>Acompanhamento do progresso no dispositivo</li>
+    <li class="feature-muted"><span>—</span>Adaptações de cardápio por IA em maior volume</li>
+   </ul>
+  </article>
+  <article class="plan-card plan-card-premium">
+   <div class="plan-popular">MAIS COMPLETO</div>
+   <div class="plan-top"><span class="plan-label">PARA EVOLUIR</span><span class="plan-symbol">✦</span></div>
+   <h2>Premium</h2><p class="plan-description">Mais flexibilidade para adaptar sua rotina com ajuda da IA.</p>
+   <div class="plan-price"><strong>R$ 59,90</strong><span>/ mês</span></div>
+   <p class="plan-billing">Cobrança mensal</p>
+   <button class="btn plan-button" onclick="choosePlan('premium')">Escolher Premium</button>
+   <div class="plan-divider"></div>
+   <p class="plan-includes">Tudo do Básico, mais</p>
+   <ul class="plan-features">
+    <li><span>✓</span>Adaptações de cardápio por IA</li>
+    <li><span>✓</span>Copiloto para dúvidas e ajustes de rotina</li>
+    <li><span>✓</span>Mais opções de substituição de refeições</li>
+    <li><span>✓</span>Reorganização do plano quando a rotina mudar</li><li><span>✓</span>Treino-resgate para dias corridos ou sessões perdidas</li><li><span>✓</span>Histórico e revisão semanal da consistência</li>
+    <li><span>✓</span>Acesso prioritário a novos recursos SHAPEN</li>
+   </ul>
+  </article>
+  <article class="plan-card plan-card-ultimate">
+   <div class="plan-popular">EXPERIÊNCIA COMPLETA</div>
+   <div class="plan-top"><span class="plan-label">PARA IR ALÉM</span><span class="plan-symbol">♛</span></div>
+   <h2>Ultimate</h2><p class="plan-description">A experiência mais completa do SHAPEN, com ferramentas avançadas para sua rotina.</p>
+   <div class="plan-price"><strong>R$ 99,90</strong><span>/ mês</span></div>
+   <p class="plan-billing">Cobrança mensal</p>
+   <button class="btn plan-button" onclick="choosePlan('ultimate')">Escolher Ultimate</button>
+   <div class="plan-divider"></div>
+   <p class="plan-includes">Tudo do Premium, mais</p>
+   <ul class="plan-features">
+    <li><span>✓</span>Adaptações de treino e refeições mais completas</li>
+    <li><span>✓</span>Planejamento semanal integrado de treino e alimentação</li>
+    <li><span>✓</span>Relatórios de evolução e consistência</li>
+    <li><span>✓</span>Mais personalização de acordo com sua rotina</li><li><span>✓</span>Diário alimentar por foto com estimativa editável</li><li><span>✓</span>Linha do tempo de medidas e fotos</li><li><span>✓</span>Copiloto por voz neste navegador</li>
+    <li><span>✓</span>Acesso antecipado a recursos avançados</li>
+   </ul>
+  </article>
+ </div>
+ <div class="plan-selection card" id="planSelection" aria-live="polite">
+  <h3>Seu plano escolhido</h3><p id="planSelectionText" class="muted small">Ainda não escolheu um plano.</p>
+ </div>
+ <p class="plan-disclaimer">A cobrança será iniciada no checkout seguro do Mercado Pago após configurar as credenciais comerciais no servidor. O acesso por plano ainda precisa de conta de usuário e validação de assinatura antes de ser usado como controle de acesso comercial.</p>
+</section>
+<section class="page" id="page-coach">
+ <div class="eyebrow">Copiloto com IA</div><h1 class="headline">A rotina mudou?<br>Reorganize.</h1><p class="sub">Quando o servidor estiver configurado, suas perguntas serão respondidas por um modelo de IA. Sem servidor configurado, o app informa que a conexão ainda não está ativa.</p>
+ <div class="card"><div class="row"><h2>SHAPEN, seu copiloto</h2><span class="chip" id="aiStatus">IA A CONFIGURAR</span></div><div class="chatbox" id="chatbox"><div class="bubble">Oi! Posso ajudar a adaptar seu plano de forma simples. Experimente: “só tenho 20 minutos”, “não tenho esse equipamento” ou “quero uma alternativa para a refeição”.</div></div><div class="pilltabs"><button class="pilltab" onclick="quickAsk('Só tenho 20 minutos hoje')">Só tenho 20 min</button><button class="pilltab" onclick="quickAsk('Não tenho esse equipamento')">Sem equipamento</button><button class="pilltab" onclick="quickAsk('Quero uma alternativa para uma refeição')">Trocar refeição</button></div><div class="actions" style="margin-bottom:12px"><button class="btn secondary" data-plan-min="ultimate" type="button" onclick="startVoiceCopilot()">🎙 Falar com o copiloto</button><button class="btn ghost" type="button" onclick="stopVoiceCopilot()">Parar voz</button></div><form class="chatform" id="chatForm"><input class="field" id="chatInput" placeholder="Conte o que mudou no seu dia..." maxlength="400"><button class="btn" type="submit">Enviar</button></form><p class="muted small" style="margin-bottom:0">Não use o chat para emergências, diagnóstico ou recomendações clínicas. Evite inserir informações pessoais sensíveis.</p></div>
+</section>
+</main></div>
+<div class="footer">SHAPEN · Protótipo funcional local · Recomendações educativas, não atendimento médico.</div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+async function choosePlan(tier){
+ const plans={basico:{name:'Básico',price:'R$ 24,90/mês'},premium:{name:'Premium',price:'R$ 59,90/mês'},ultimate:{name:'Ultimate',price:'R$ 99,90/mês'}};
+ const chosen=plans[tier];if(!chosen)return;
+ localStorage.setItem('shapen_selected_plan',tier);
+ const target=$('planSelectionText');const status=document.getElementById('checkoutStatus');
+ const paymentMethod=document.getElementById('checkoutMethod')?.value||'card';
+  if(target)target.textContent=chosen.name+' — '+chosen.price+'. Preparando checkout de '+(paymentMethod==='pix'?'Pix':'cartão')+'...';
+ const email=document.getElementById('checkoutEmail')?.value.trim();
+ if(!email || !email.includes('@') || !email.includes('.')){if(status)status.textContent='Informe um e-mail válido para continuar.';toast('Informe seu e-mail para assinar.');return;}
+ try{
+  const res=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:tier,email:email,paymentMethod:paymentMethod})});
+  const data=await res.json();if(!res.ok)throw new Error(data.error||'Não foi possível iniciar o pagamento.');
+  if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
+  if(status)status.innerHTML='Checkout de '+(paymentMethod==='pix'?'Pix (pagamento único)':'cartão de crédito (assinatura mensal)')+' pronto: <a href="'+escapeHtml(data.checkoutUrl)+'" target="_blank" rel="noopener noreferrer">abrir pagamento seguro</a>'+(paymentMethod==='pix'?'<p>Importante: o Pix cobre este mês; para continuar no mês seguinte, será necessário pagar novamente.</p>':'');
+ }catch(e){if(status)status.textContent=e.message||'Checkout indisponível.';toast(e.message||'Não foi possível iniciar o pagamento.');}
+}
+function renderPlanSelection(){
+ const tier=localStorage.getItem('shapen_selected_plan');
+ const plans={basico:{name:'Básico',price:'R$ 24,90/mês'},premium:{name:'Premium',price:'R$ 59,90/mês'},ultimate:{name:'Ultimate',price:'R$ 99,90/mês'}};
+ const target=$('planSelectionText');
+ if(target&&tier&&plans[tier])target.textContent=plans[tier].name+' — '+plans[tier].price+'. Seleção local registrada. Para pagar, escolha o plano e informe seu e-mail acima.';
+}
+
+const $=id=>document.getElementById(id);
+const GOALS={muscle:'Hipertrofia',fat:'Reduzir gordura',fitness:'Condicionamento',recomp:'Recomposição'};
+const STEPS=['Seu objetivo','Seu ponto de partida','Sua rotina de treino','Sua alimentação','Segurança'];
+let currentStep=0, profile=null, plan=null, done=new Set(), todayKey=new Date().toISOString().slice(0,10);
+function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+name));document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===name));if(name==='workout')renderWorkout();if(name==='nutrition'){renderNutrition();renderFoodJournal();}if(name==='home')renderHome();if(name==='plans')renderPlanSelection();if(name==='progress'){renderProgress();buildWeeklyReview();}window.scrollTo({top:0,behavior:'smooth'});}
+document.querySelectorAll('.nav').forEach(n=>n.addEventListener('click',()=>showPage(n.dataset.page)));
+function updateWizard(){document.querySelectorAll('.wizard').forEach(w=>w.classList.toggle('hide',+w.dataset.step!==currentStep));$('stepNumber').textContent=currentStep+1;$('stepTitle').textContent=STEPS[currentStep];$('stepCount').textContent=`Etapa ${currentStep+1} de ${STEPS.length}`;$('stepBar').style.width=((currentStep+1)/STEPS.length*100)+'%';$('prevBtn').disabled=currentStep===0;$('nextBtn').classList.toggle('hide',currentStep===4);$('generateBtn').classList.toggle('hide',currentStep!==4);document.querySelectorAll('.choice input').forEach(i=>i.closest('.choice').classList.toggle('selected',i.checked));}
+document.querySelectorAll('.choice input').forEach(i=>i.addEventListener('change',updateWizard));
+function prevStep(){if(currentStep>0){currentStep--;updateWizard();}}
+function nextStep(){if(currentStep===1){let a=+$('age').value,w=+$('weight').value,h=+$('height').value;if(!a||a<18||a>100||!w||w<30||w>300||!h||h<120||h>230){toast('Preencha idade (18+), peso e altura válidos.');return;}}currentStep=Math.min(4,currentStep+1);updateWizard();}
+function getForm(){const v=n=>document.querySelector(`[name="${n}"]:checked`)?.value;return {goal:v('goal')||'muscle',name:$('name').value.trim(),target:$('target').value.trim(),age:+$('age').value,sex:$('sex').value,weight:+$('weight').value,height:+$('height').value,activity:+$('activity').value,experience:$('experience').value,days:+$('days').value,duration:+$('duration').value,equipment:$('equipment').value,cardio:$('cardio').value,diet:$('diet').value,meals:+$('meals').value,budget:$('budget').value,cooking:$('cooking').value,avoid:$('avoid').value.trim(),limitations:$('limitations').value.trim(),conditions:$('conditions').value.trim()};}
+async function generatePlan(){if(!$('riskCheck').checked||!$('termsCheck').checked){toast('Confirme os dois itens de segurança para continuar.');return;}let p=getForm();if(!p.age||!p.weight||!p.height){toast('Volte à etapa 2 e complete idade, peso e altura.');currentStep=1;updateWizard();return;}profile=p;localStorage.setItem('shapen_profile',JSON.stringify(p));if(window.shapenPlan==='gratis'){try{if(shapenSession){await fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json',Authorization:'Bearer '+shapenSession.access_token},body:JSON.stringify({displayName:p.name||'',fitnessProfile:{profile:p}})});}}catch(saveError){console.warn('Perfil mantido neste dispositivo; sincronização indisponível.',saveError);}showSubscriptionPlans();$('checkoutMessage').textContent='Seu perfil está pronto! Para liberar o treino e a nutrição personalizados por IA, escolha um plano. Você pode voltar depois e continuar de onde parou.';return;}let btn=$('generateBtn');btn.disabled=true;btn.textContent='Criando plano com IA…';try{const res=await fetch('/api/plan',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile:p})});if(!res.ok){let e=await res.json().catch(()=>({}));throw new Error(e.error||'Não foi possível conectar à IA.');}const data=await res.json();const base=buildPlan(p);plan={...base,...data,created:new Date().toISOString()};localStorage.setItem('shapen_profile',JSON.stringify(p));localStorage.setItem('shapen_plan',JSON.stringify(plan));try{await fetch('/api/profile',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({displayName:p.name||'',fitnessProfile:{profile:p,plan:plan}})});}catch(saveError){console.warn('Não foi possível sincronizar o perfil na nuvem.',saveError);}localStorage.setItem('shapen_done',JSON.stringify([]));done=new Set();renderAll();showPage('home');toast('Plano personalizado pela IA criado.');$('aiStatus').textContent='IA CONECTADA';}catch(e){toast(e.message+' Verifique se o servidor e a chave da API estão configurados.');}finally{btn.disabled=false;btn.textContent='Criar meu plano ↗';}}
+function buildPlan(p){let bmi=p.weight/((p.height/100)**2);let bmr=p.sex==='m'?10*p.weight+6.25*p.height-5*p.age+5:p.sex==='f'?10*p.weight+6.25*p.height-5*p.age-161:10*p.weight+6.25*p.height-5*p.age-78;let maintenance=bmr*p.activity;let target=maintenance+(p.goal==='muscle'?200:p.goal==='fat'?-250:p.goal==='recomp'?0:0);let kcal=Math.round(target/50)*50;let protein=Math.round(p.weight*(p.goal==='muscle'||p.goal==='recomp'?1.6:1.4));let sessions=makeSessions(p);let meals=makeMeals(p);return {bmi:+bmi.toFixed(1),kcal,protein,sessions,meals,created:new Date().toISOString()};}
+function makeSessions(p){const baseGym=[
+ {name:'Agachamento goblet ou leg press',sets:'3 × 8–12',alt:['Agachamento com peso corporal','Leg press','Sentar e levantar de um banco'],focus:'Pernas'},
+ {name:'Supino com halteres ou máquina',sets:'3 × 8–12',alt:['Flexão inclinada','Chest press na máquina','Supino com halteres'],focus:'Peito'},
+ {name:'Remada sentada',sets:'3 × 8–12',alt:['Remada com halteres','Remada com elástico','Remada apoiada'],focus:'Costas'},
+ {name:'Levantamento romeno leve',sets:'2 × 8–12',alt:['Ponte de glúteos','Pull-through com cabo','Dobradiça de quadril sem peso'],focus:'Posterior'},
+ {name:'Prancha',sets:'2 × 20–40 s',alt:['Dead bug','Prancha inclinada','Bird dog'],focus:'Core'},
+ {name:'Desenvolvimento de ombros',sets:'2 × 8–12',alt:['Elevação lateral leve','Press de ombros na máquina','Flexão na parede'],focus:'Ombros'}];
+const home=[
+ {name:'Agachamento até cadeira',sets:'3 × 8–12',alt:['Sentar e levantar','Agachamento parcial confortável','Step-up baixo'],focus:'Pernas'},
+ {name:'Flexão inclinada',sets:'3 × 6–12',alt:['Flexão na parede','Flexão de joelhos','Supino com halteres'],focus:'Peito'},
+ {name:'Remada com mochila ou elástico',sets:'3 × 8–12',alt:['Remada unilateral com mochila','Puxada com elástico','Isometria de costas'],focus:'Costas'},
+ {name:'Ponte de glúteos',sets:'2 × 10–15',alt:['Ponte isométrica','Extensão de quadril em pé','Dobradiça de quadril'],focus:'Glúteos'},
+ {name:'Dead bug',sets:'2 × 8 por lado',alt:['Bird dog','Prancha inclinada','Marcha controlada'],focus:'Core'},
+ {name:'Elevação lateral com halteres',sets:'2 × 10–15',alt:['Elevação lateral com garrafas','Flexão na parede','Remada alta com elástico leve'],focus:'Ombros'}];
+let exercises=(p.equipment==='gym'?baseGym:home).map(x=>({...x,selected:x.name}));let count=p.duration<=20?3:p.duration<=30?4:6;if(p.experience==='beginner')count=Math.min(count,4);let n=p.days;let out=[];for(let d=0;d<n;d++){let selected=exercises.slice(0,count).map((e,i)=>({...e,key:`d${d}e${i}`}));if(d%2===1)selected=selected.map((e,i)=>({...e,selected:e.alt[(d+i)%e.alt.length]}));out.push({title:n===2?['Corpo inteiro A','Corpo inteiro B'][d]:n===3?['Corpo inteiro A','Corpo inteiro B','Corpo inteiro C'][d]:`Sessão ${d+1}`,focus:n<=3?'Corpo inteiro':d%2===0?'Ênfase em empurrar e pernas':'Ênfase em puxar e posterior',minutes:p.duration,exercises:selected});}return out;}
+function makeMeals(p){let proteins=p.diet==='vegan'?['tofu ou tempeh','lentilha e feijão','grão-de-bico']:p.diet==='vegetarian'?['ovos ou iogurte','lentilha e feijão','tofu ou queijo fresco']:p.diet==='pesc'?['peixe','ovos ou iogurte','lentilha e feijão']:['frango ou tofu','ovos, iogurte ou alternativa vegetal','feijão, lentilha ou peixe'];let carbs=p.budget==='economy'?['arroz e feijão','aveia com banana','batata ou mandioca']:['arroz, feijão e legumes','aveia com fruta','batata, massa ou quinoa'];let avoid=p.avoid.toLowerCase();const filter=(s)=>{if(avoid.includes('lactose')||avoid.includes('leite'))s=s.replace(/iogurte/gi,'alternativa vegetal');if(avoid.includes('amendoim'))s=s.replace(/amendoim/gi,'sementes de abóbora');if(avoid.includes('glúten'))s=s.replace(/pão/gi,'tapioca');return s;};let arr=[{icon:'☀️',title:'Café da manhã',desc:`${filter(carbs[1])} + ${filter(proteins[1])} + fruta`,alt:`Alternativa: tapioca ou pão que você tolere + ${filter(proteins[1])} + fruta`},{icon:'🥗',title:'Almoço',desc:`${filter(carbs[0])} + ${filter(proteins[0])} + legumes/verduras`,alt:`Alternativa: ${filter(proteins[2])} + batata + salada`},{icon:'🍌',title:'Lanche',desc:`Fruta + ${filter(proteins[1])} ou uma opção vegetal equivalente`,alt:'Alternativa: sanduíche simples ou fruta com aveia, conforme preferências'},{icon:'🌙',title:'Jantar',desc:`${filter(proteins[2])} + ${filter(carbs[2])} + vegetais`,alt:`Alternativa: repetir a estrutura do almoço com outros ingredientes`}];if(p.meals===3)arr.splice(2,1);if(p.meals===5)arr.splice(3,0,{icon:'🥣',title:'Lanche extra (opcional)',desc:'Fruta, aveia ou outro alimento prático que você goste',alt:'Alternativa: ajuste o tamanho das refeições conforme sua fome'});return arr;}
+function renderAll(){renderHome();renderWorkout();renderNutrition();$('topStatus').textContent=profile?'● PERFIL CONFIGURADO':'● MODO DEMONSTRAÇÃO';if($('aiStatus'))$('aiStatus').textContent=(plan&&plan.aiSummary)?'IA CONECTADA':'IA A CONFIGURAR';}
+function renderHome(){if(!profile||!plan){$('welcome').innerHTML='Menos adivinhação.<br>Mais direção.';$('homeSub').textContent='Monte seu perfil em etapas e receba uma estrutura inicial de treino e alimentação alinhada ao seu objetivo.';$('homeCta').classList.remove('hide');$('metricGoal').textContent='—';$('metricDays').textContent='—';$('metricConsistency').innerHTML='0<span> tarefas</span>';return;}
+$('welcome').innerHTML=`Olá${profile.name?' '+escapeHtml(profile.name):''}.<br>Vamos no seu ritmo.`;$('homeSub').textContent='Seu plano inicial está pronto. Use as alternativas quando a rotina mudar e revise o que funciona para você.';$('homeCta').classList.add('hide');$('metricGoal').textContent=GOALS[profile.goal];$('metricDays').textContent=profile.days;$('metricConsistency').innerHTML=done.size+'<span> tarefas</span>';$('miniWorkout').textContent=`${profile.days} × ${profile.duration} min`;$('miniFood').textContent=`${profile.meals} refeições-base`;$('todayLabel').textContent=new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'});let tasks=[{id:'train',title:'Fazer a sessão de treino planejada',desc:`${profile.duration} minutos · ${plan.sessions[0].title}`},{id:'food',title:'Organizar as refeições do dia',desc:'Escolha opções possíveis, sem buscar perfeição.'},{id:'water',title:'Fazer pausas para beber água',desc:'Ajuste a hidratação ao clima, atividade e orientação profissional.'},{id:'sleep',title:'Proteger o horário de descanso',desc:'Crie uma rotina de sono consistente.'}];$('todayTasks').innerHTML=tasks.map(t=>`<label class="checkline ${done.has(t.id)?'done':''}"><input type="checkbox" ${done.has(t.id)?'checked':''} onchange="toggleTask('${t.id}',this.checked)"><span><strong>${t.title}</strong><div class="muted small">${t.desc}</div></span></label>`).join('');}
+function renderWorkout(){let root=$('workoutContent');if(!profile||!plan){root.innerHTML=`<div class="card empty"><div class="emoji">↗</div><h2>Seu treino começa com seu perfil</h2><p class="muted">Configure objetivo, experiência, disponibilidade e equipamentos.</p><button class="btn" onclick="showPage('setup')">Configurar perfil</button></div>`;return;}root.innerHTML=`<div class="card"><div class="row"><div><h2>Seu plano de treino</h2><div class="muted small">${profile.days} dias/semana · ${profile.duration} min/sessão · ${profile.experience==='beginner'?'iniciante':profile.experience==='advanced'?'avançado':'intermediário'}</div></div><button class="btn secondary" onclick="showPage('setup')">Editar perfil</button></div>${plan.aiSummary?`<div class="card" style="margin-top:14px;background:#493260;border-color:#8d65b8"><div class="eyebrow">PLANO GERADO POR IA</div><p style="margin:8px 0 0">${escapeHtml(plan.aiSummary)}</p></div>`:''}<div class="notice" style="margin-top:14px">Comece com esforço confortável, priorize técnica e aumente gradualmente. Se sentir dor aguda, tontura, dor no peito ou falta de ar fora do esperado, interrompa e procure orientação.</div><div class="pilltabs" style="margin-top:16px">${plan.sessions.map((s,i)=>`<button class="pilltab ${i===0?'active':''}" onclick="selectSession(${i},this)">Dia ${i+1}</button>`).join('')}</div><div id="sessionDetails"></div></div><div class="card" style="margin-top:14px"><h2>Como progredir</h2><div class="stack"><div><b>1. Técnica primeiro</b><div class="muted small">Use uma carga que permita controlar cada repetição.</div></div><div><b>2. Registre o que fez</b><div class="muted small">Quando completar as séries com boa técnica e facilidade, considere um pequeno aumento na próxima sessão.</div></div><div><b>3. Ajuste sem culpa</b><div class="muted small">Uma versão mais curta ou uma alternativa é melhor do que abandonar a rotina.</div></div></div></div>`;renderSession(0);}
+function selectSession(i,btn){document.querySelectorAll('#workoutContent .pilltab').forEach(x=>x.classList.remove('active'));btn.classList.add('active');renderSession(i);}
+function renderSession(i){if(!plan)return;let s=plan.sessions[i];$('sessionDetails').innerHTML=`<div class="row" style="margin:8px 0 12px"><div><h3>${s.title}</h3><div class="muted small">${s.focus} · ${s.minutes} min</div></div><span class="chip lime">SESSÃO ${i+1}</span></div>${s.exercises.map((e,j)=>`<div class="exercise"><div><strong>${e.selected}</strong><small>${e.focus} · ${e.sets}</small></div><select class="altselect" onchange="changeExercise(${i},${j},this.value)" aria-label="Alternativa para ${e.name}"><option value="${e.name}" ${e.selected===e.name?'selected':''}>Exercício principal</option>${e.alt.map(a=>`<option ${e.selected===a?'selected':''}>${escapeHtml(a)}</option>`).join('')}</select></div>`).join('')}<div class="actions"><button class="btn" onclick="logWorkout(i)">Concluir sessão</button><button class="btn secondary" onclick="showPage('coach')">Preciso adaptar hoje</button></div>`;}
+function changeExercise(si,ei,val){plan.sessions[si].exercises[ei].selected=val;localStorage.setItem('shapen_plan',JSON.stringify(plan));toast('Alternativa atualizada.');}
+function mealPhoto(m,i){
+  const title=String(m?.title||'').toLowerCase();
+  if(/café|cafe|manhã|manha|breakfast/.test(title)) return 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?auto=format&fit=crop&w=900&q=80';
+  if(/almoço|almoco|jantar|refeição principal|refeicao principal|lunch|dinner/.test(title)) return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80';
+  if(/lanche|snack|pré treino|pre treino|pós treino|pos treino/.test(title)) return 'https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80';
+  if(/ceia/.test(title)) return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=80';
+  return ['https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=900&q=80','https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&w=900&q=80','https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=900&q=80'][i%3];
+}
+function mealCard(m,i){
+  return `<article class="meal-card">
+    <div class="meal-photo"><img src="${mealPhoto(m,i)}" alt="Referência visual de ${escapeHtml(m.title||'refeição')}" loading="lazy" onerror="this.style.display='none'"><span class="meal-photo-label">${escapeHtml(m.icon||'◉')} ${escapeHtml(m.title||'Refeição')}</span></div>
+    <div class="meal-body"><h3>${escapeHtml(m.title||'Refeição')}</h3><p>${escapeHtml(m.desc||'Opção flexível para sua rotina.')}</p><div class="meal-alt">↳ Alternativa: ${escapeHtml(m.alt||'Escolha uma opção compatível com você.')}</div></div>
+  </article>`;
+}
+function renderNutrition(){
+  let root=$('nutritionContent');
+  if(!profile||!plan){root.innerHTML=`<div class="card empty"><div class="emoji">◉</div><h2>Seu cardápio começa aqui</h2><p class="muted">Configure seu perfil para montar sugestões de refeições alinhadas à sua rotina.</p><button class="btn" onclick="showPage('setup')">Montar meu plano</button></div>`;return;}
+  let p=profile;let kcal=plan.kcal;let showKcal=p.sex!=='x';
+  root.innerHTML=`
+  <div class="nutrition-hero"><div class="eyebrow">SEU CARDÁPIO PERSONALIZADO</div><h2>O que comer no dia a dia</h2><p>${escapeHtml(plan.nutritionSummary||'Sugestões flexíveis para ajudar você a organizar sua alimentação.')}</p></div>
+  <div class="nutrition-section-title"><h2>Suas refeições</h2><span class="chip lime">${plan.meals.length} opções</span></div>
+  <p class="muted small">Veja as ideias, confira as alternativas e escolha o que combina com sua rotina. As imagens são referências visuais.</p>
+  <div class="meal-grid">${plan.meals.map((m,i)=>mealCard(m,i)).join('')}</div>
+  <div class="actions"><button class="btn" data-plan-min="premium" onclick="adaptNutrition()">✳ Adaptar meu cardápio com IA</button></div>
+  <div class="grid" style="margin-top:20px">
+    <div class="card span5"><div class="eyebrow">REFERÊNCIAS EDUCATIVAS</div><h2>Seu ponto de partida</h2><div class="metric">${showKcal&&kcal!=null?Number(kcal).toLocaleString('pt-BR')+' kcal':'Faixa não exibida'}</div><div class="muted small">${showKcal&&kcal!=null?'Estimativa inicial de energia, não uma prescrição.':'Prefiro não estimar energia sem essa referência.'}</div><div class="row" style="margin-top:16px"><span class="muted small">Proteína estimada</span><b>${plan.protein==null?'—':escapeHtml(String(plan.protein))+' g/dia*'}</b></div><p class="muted small">*Referência aproximada, não uma meta obrigatória. Necessidades individuais variam.</p><div class="notice">Procure orientação profissional para adaptar quantidades às suas necessidades de saúde.</div></div>
+    <div class="card span7"><h2>Lista de compras</h2><p class="muted small">Itens base para organizar a semana. Confira rótulos e alergênicos.</p>${shoppingList(p).map(x=>`<label class="checkline"><input type="checkbox"><span>${escapeHtml(x)}</span></label>`).join('')}</div>
+  </div>`;
+}
+function adaptNutrition(){
+  const root = $('nutritionContent');
+  let box = document.getElementById('nutritionAdaptBox');
+  if (box) { box.remove(); return; }
+  box = document.createElement('div');
+  box.id = 'nutritionAdaptBox';
+  box.className = 'card';
+  box.style.marginTop = '16px';
+  box.innerHTML = `
+    <h2>Adaptar minhas refeições</h2>
+    <p class="muted small">Conte o que você gostaria de mudar. A IA vai montar novas opções em cartões para você revisar antes de aplicar.</p>
+    <textarea id="nutritionAdaptRequest" class="field" placeholder="Ex.: trocar frango por ovos, reduzir o custo e sugerir opções mais rápidas" style="min-height:90px"></textarea>
+    <div class="actions">
+      <button class="btn" id="nutritionAdaptSubmit" onclick="submitNutritionAdapt()">Gerar cardápio adaptado</button>
+      <button class="btn secondary" onclick="document.getElementById('nutritionAdaptBox').remove()">Cancelar</button>
+    </div>
+    <p id="nutritionAdaptStatus" class="muted small" aria-live="polite"></p>
+    <div id="nutritionAdaptResults" class="stack"></div>
+  `;
+  root.appendChild(box);
+  box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+async function submitNutritionAdapt(){
+  const input = $('nutritionAdaptRequest');
+  const status = $('nutritionAdaptStatus');
+  const button = $('nutritionAdaptSubmit');
+  const results = $('nutritionAdaptResults');
+  const request = input?.value.trim();
+  if (!request) { status.textContent = 'Escreva o que deseja adaptar.'; return; }
+  if (!profile || !plan) { status.textContent = 'Configure seu perfil e crie um plano primeiro.'; return; }
+  button.disabled = true;
+  button.textContent = 'Montando cardápio...';
+  status.textContent = 'A IA está preparando novas opções para seu perfil.';
+  results.innerHTML = '';
+  try {
+    const res = await fetch('/api/adapt-meals', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ request, profile, plan })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Não foi possível gerar o cardápio.');
+    if (!Array.isArray(data.meals) || !data.meals.length) throw new Error('A IA não retornou refeições para mostrar.');
+    results.innerHTML = `
+      <div class="card" style="background:#2a1c39">
+        <h3>${escapeHtml(data.title || 'Cardápio adaptado')}</h3>
+        <p class="muted small">${escapeHtml(data.summary || 'Revise as opções antes de aplicar.')}</p>
+        ${data.meals.map((m,i) => mealCard(m,i)).join('')}
+        <div class="actions">
+          <button class="btn" onclick="applyAdaptedMeals()">Usar este cardápio</button>
+          <button class="btn secondary" onclick="discardAdaptedMeals()">Descartar</button>
+        </div>
+      </div>`;
+    window.shapenPendingMeals = data.meals;
+    status.textContent = 'Confira as refeições. Seu plano atual só muda se você clicar em “Usar este cardápio”.';
+  } catch (error) {
+    status.textContent = error.message || 'Falha ao conectar com a IA. Tente novamente.';
+  } finally {
+    button.disabled = false;
+    button.textContent = 'Gerar cardápio adaptado';
+  }
+}
+function applyAdaptedMeals(){
+  const meals = window.shapenPendingMeals;
+  if (!Array.isArray(meals) || !meals.length) { toast('Gere um cardápio antes de aplicar.'); return; }
+  plan.meals = meals;
+  localStorage.setItem('shapen_plan', JSON.stringify(plan));
+  window.shapenPendingMeals = null;
+  renderNutrition();
+  toast('Cardápio atualizado e salvo neste dispositivo.');
+}
+function discardAdaptedMeals(){
+  window.shapenPendingMeals = null;
+  const results = $('nutritionAdaptResults');
+  if (results) results.innerHTML = '';
+  const status = $('nutritionAdaptStatus');
+  if (status) status.textContent = 'Sugestão descartada. Seu cardápio atual continua igual.';
+}
+function shoppingList(p){let base=p.diet==='vegan'?['Tofu ou proteína vegetal','Feijão, lentilha e grão-de-bico','Aveia e arroz','Frutas da estação','Legumes e verduras','Batata ou mandioca']:p.diet==='vegetarian'?['Ovos e/ou tofu','Feijão, lentilha e grão-de-bico','Iogurte ou alternativa vegetal','Aveia e arroz','Frutas da estação','Legumes e verduras']:['Ovos ou alternativa vegetal','Frango, peixe ou tofu','Feijão e lentilha','Arroz e aveia','Frutas da estação','Legumes e verduras'];if(p.avoid)base.push('Verificar ingredientes e rótulos: '+p.avoid);return base;}
+function toggleTask(id,on){if(on)done.add(id);else done.delete(id);localStorage.setItem('shapen_done',JSON.stringify([...done]));renderHome();}
+function quickAsk(q){$('chatInput').value=q;sendChat(q);}
+$('chatForm').addEventListener('submit',e=>{e.preventDefault();let q=$('chatInput').value.trim();if(q)sendChat(q);});
+async function sendChat(q){$('chatInput').value='';let box=$('chatbox');box.insertAdjacentHTML('beforeend',`<div class="bubble user">${escapeHtml(q)}</div>`);let loading=document.createElement('div');loading.className='bubble';loading.textContent='Pensando…';box.appendChild(loading);box.scrollTop=box.scrollHeight;try{const res=await fetch('/api/coach',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,profile,plan})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Falha na conexão');loading.textContent=data.reply||'Não recebi uma resposta.';$('aiStatus').textContent='IA CONECTADA';}catch(e){loading.textContent='A IA ainda não está conectada. Inicie o servidor e configure OPENAI_API_KEY no arquivo .env para ativar respostas reais. O protótipo não enviou sua pergunta para um modelo.';$('aiStatus').textContent='IA OFFLINE';}box.scrollTop=box.scrollHeight;}
+function answer(q){let s=q.toLowerCase();if(!profile||!plan)return'Para adaptar algo de forma mais útil, configure seu perfil em “Meu plano”. Esta versão ainda não usa uma IA conectada.';if(/20|minuto|pouco tempo|corrid/.test(s))return`Vamos reduzir a sessão sem tentar compensar depois. Faça um aquecimento leve e escolha 2–3 exercícios principais do Dia 1, com técnica controlada e descanso suficiente. Se estiver cansado(a), uma caminhada leve ou descanso também pode ser adequado. Seu plano base é de ${profile.duration} minutos; a versão curta é uma alternativa, não uma obrigação.`;if(/equipamento|máquina|halter|academia|casa/.test(s))return`Abra Treino e use o menu de alternativas ao lado de cada exercício. Escolha uma opção que você consiga executar com segurança e sem dor. Se nenhuma opção funcionar, pule esse movimento e peça orientação a um profissional em vez de improvisar uma execução arriscada.`;if(/refei|comida|alimenta|trocar|alternativa|ingrediente/.test(s))return`Use a alternativa exibida em Nutrição como ponto de partida. Tente manter uma estrutura simples com fonte de proteína compatível com sua alimentação, carboidrato, frutas/vegetais e líquidos. Se houver alergia, intolerância ou condição clínica, confirme a adequação com um nutricionista.`;if(/dor|joelho|ombro|lesão|machuc/.test(s))return`Não tente treinar através de dor aguda ou que piora. Interrompa o exercício que provoca sintomas e procure avaliação de um profissional de saúde, especialmente se a dor persistir ou limitar movimentos. Este protótipo não consegue avaliar lesões nem prescrever reabilitação.`;if(/peso|caloria|emagrec|gordura/.test(s))return`Peso e altura são apenas parte do contexto. As estimativas mostradas são aproximadas e não definem o que você precisa comer. Observe tendências ao longo do tempo, energia, sono e desempenho; para uma meta individual de calorias ou tratamento nutricional, consulte um nutricionista.`;if(/massa|hipertrof|força|músculo/.test(s))return`Para hipertrofia, consistência, técnica, progressão gradual, recuperação e alimentação suficiente importam mais do que trocar de rotina a toda hora. Registre cargas e repetições, durma bem e procure orientação profissional para um programa individualizado.`;return`Entendi: “${q}”. Nesta versão, o copiloto trabalha com respostas orientativas locais e não interpreta sua situação com um modelo de IA real. Posso ajudar com ajustes gerais de rotina, alternativas de exercício e organização das refeições. Para uma recomendação clínica ou personalizada em profundidade, é necessária avaliação profissional.`;}
+function escapeHtml(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function toast(msg){let old=document.querySelector('.toast');if(old)old.remove();let t=document.createElement('div');t.className='toast';t.textContent=msg;document.body.appendChild(t);setTimeout(()=>t.remove(),2600);}
+
+function logWorkout(i){if(!plan||!plan.sessions||!plan.sessions[i])return;const s=plan.sessions[i];let a=JSON.parse(localStorage.getItem('shapen_activity_log')||'[]');a.push({date:new Date().toISOString(),title:s.title,minutes:s.minutes||profile.duration});localStorage.setItem('shapen_activity_log',JSON.stringify(a.slice(-200)));toast('Treino registrado no histórico.');}
+function recoverMissedWorkout(i){if(!plan||!plan.sessions[i])return;showPage('coach');quickAsk('Perdi a sessão de hoje. Sugira uma versão leve de 15 minutos para retomar sem compensar excessivamente.');}
+
+function saveProgress(){const file=$('progressPhoto').files[0];const entry={date:new Date().toISOString(),weight:Number($('progressWeight').value)||null,waist:Number($('progressWaist').value)||null,hip:Number($('progressHip').value)||null,note:$('progressNote').value.trim()};const save=function(photo){entry.photo=photo||null;let a=JSON.parse(localStorage.getItem('shapen_progress')||'[]');a.push(entry);try{localStorage.setItem('shapen_progress',JSON.stringify(a.slice(-30)));}catch(e){toast('Armazenamento cheio; tente sem foto.');return;}$('progressWeight').value='';$('progressWaist').value='';$('progressHip').value='';$('progressNote').value='';$('progressPhoto').value='';renderProgress();buildWeeklyReview();toast('Registro salvo neste dispositivo.');};if(file){if(file.size>500000){toast('A foto deve ter até 500 KB.');return;}const reader=new FileReader();reader.onload=function(){save(reader.result)};reader.readAsDataURL(file);}else save(null);}
+function renderProgress(){const root=$('progressTimeline');if(!root)return;const a=JSON.parse(localStorage.getItem('shapen_progress')||'[]').slice().reverse(),b=JSON.parse(localStorage.getItem('shapen_activity_log')||'[]').slice().reverse();const all=a.map(x=>({...x,kind:'medida'})).concat(b.map(x=>({...x,kind:'treino'}))).sort((x,y)=>new Date(y.date)-new Date(x.date));root.innerHTML=all.length?all.slice(0,30).map(x=>'<div class="foodrow"><div class="foodicon">'+(x.kind==='treino'?'↗':'◉')+'</div><div><strong>'+escapeHtml(x.kind==='treino'?(x.title||'Treino concluído'):'Registro corporal')+'</strong><small>'+new Date(x.date).toLocaleDateString('pt-BR')+' · '+[x.weight?'Peso: '+x.weight+' kg':'',x.waist?'Cintura: '+x.waist+' cm':'',x.hip?'Quadril: '+x.hip+' cm':'',x.minutes?x.minutes+' min':'',x.note||''].filter(Boolean).map(escapeHtml).join(' · ')+'</small></div></div>').join(''):'<p class="muted">Ainda não há registros. Conclua um treino ou salve medidas.</p>';}
+function buildWeeklyReview(){const root=$('weeklyReview');if(!root)return;const since=Date.now()-7*86400000;const a=JSON.parse(localStorage.getItem('shapen_activity_log')||'[]').filter(x=>new Date(x.date).getTime()>=since);const minutes=a.reduce((n,x)=>n+(Number(x.minutes)||0),0);root.innerHTML='<div class="metric">'+a.length+' <span>treinos em 7 dias</span></div><p>'+(a.length?'Você registrou '+a.length+' sessão(ões), somando '+minutes+' minutos. Retome na próxima sessão e evite compensar treinos perdidos de uma só vez.':'Você ainda não registrou treinos esta semana. Escolha uma sessão curta e realista para retomar.')+'</p>';}
+function exportProgress(){const data={activities:JSON.parse(localStorage.getItem('shapen_activity_log')||'[]'),progress:JSON.parse(localStorage.getItem('shapen_progress')||'[]')};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='shapen-meus-dados.json';a.click();URL.revokeObjectURL(url);}
+function speakWeeklyReview(){if(!('speechSynthesis'in window)){toast('Áudio não disponível neste navegador.');return;}const u=new SpeechSynthesisUtterance($('weeklyReview').innerText);u.lang='pt-BR';speechSynthesis.speak(u);}
+
+async function analyzeFoodPhoto(){const file=$('foodPhotoInput').files[0],status=$('foodPhotoStatus'),out=$('foodPhotoResult');if(!file){status.textContent='Escolha uma foto primeiro.';return;}if(file.size>4*1024*1024){status.textContent='A foto deve ter até 4 MB.';return;}status.textContent='Analisando a foto com IA…';try{const image=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(file)});const res=await fetch('/api/food-photo',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({image:image})});const data=await res.json();if(!res.ok)throw new Error(data.error||'Falha na análise.');window.shapenPendingFood={...data,photo:image};out.innerHTML='<div class="card" style="margin-top:12px"><h3>Confira e corrija</h3><label class="label" for="foodName">Alimentos prováveis</label><input class="field" id="foodName" value="'+escapeHtml(data.foods||'')+'"><label class="label" for="foodPortion">Porção estimada</label><input class="field" id="foodPortion" value="'+escapeHtml(data.portion||'')+'"><p class="muted small">'+escapeHtml(data.note||'Estimativa visual incerta.')+'</p><button class="btn" onclick="saveFoodEntry()">Salvar no diário</button></div>';status.textContent='Revise os campos antes de salvar.';}catch(e){status.textContent=e.message||'Não foi possível analisar a imagem.';}}
+function saveFoodEntry(){const p=window.shapenPendingFood;if(!p)return;const a=JSON.parse(localStorage.getItem('shapen_food_journal')||'[]');a.push({date:new Date().toISOString(),foods:$('foodName').value,portion:$('foodPortion').value,note:p.note,photo:p.photo});try{localStorage.setItem('shapen_food_journal',JSON.stringify(a.slice(-10)));window.shapenPendingFood=null;$('foodPhotoResult').innerHTML='';$('foodPhotoStatus').textContent='Refeição salva neste navegador.';renderFoodJournal();}catch(e){toast('Armazenamento cheio; use uma foto menor.');}}
+function renderFoodJournal(){const root=$('foodJournal');if(!root)return;const a=JSON.parse(localStorage.getItem('shapen_food_journal')||'[]').slice().reverse();root.innerHTML=a.length?'<h3>Refeições recentes</h3>'+a.map(x=>'<div class="foodrow"><div class="foodicon">◉</div><div><strong>'+escapeHtml(x.foods)+'</strong><small>'+escapeHtml(x.portion)+' · '+new Date(x.date).toLocaleDateString('pt-BR')+'</small></div></div>').join(''):'<p class="muted small">Suas refeições salvas aparecerão aqui.</p>';}
+
+
+let voiceRecognition=null;
+function startVoiceCopilot(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){toast('Reconhecimento de voz não disponível neste navegador.');return;}voiceRecognition=new SR();voiceRecognition.lang='pt-BR';voiceRecognition.interimResults=false;voiceRecognition.maxAlternatives=1;voiceRecognition.onresult=function(e){const q=e.results[0][0].transcript;$('chatInput').value=q;sendChat(q);};voiceRecognition.onerror=function(){toast('Verifique a permissão do microfone.');};voiceRecognition.start();toast('Pode falar; estou ouvindo.');}
+function stopVoiceCopilot(){if(voiceRecognition)voiceRecognition.stop();voiceRecognition=null;if('speechSynthesis'in window)speechSynthesis.cancel();}
+
+function loadSaved(){try{profile=JSON.parse(localStorage.getItem('shapen_profile')||'null');plan=JSON.parse(localStorage.getItem('shapen_plan')||'null');done=new Set(JSON.parse(localStorage.getItem('shapen_done')||'[]'));if(profile){$('name').value=profile.name||'';$('target').value=profile.target||'';for(let k of ['age','sex','weight','height','activity','experience','days','duration','equipment','cardio','diet','meals','budget','cooking','avoid','limitations','conditions'])if($(k))$(k).value=profile[k]??$(k).value;let g=document.querySelector(`[name="goal"][value="${profile.goal}"]`);if(g)g.checked=true;}renderAll();renderPlanSelection();renderProgress();buildWeeklyReview();}catch(e){console.warn('Não foi possível recuperar o perfil local.',e);}}
+updateWizard();loadSaved();
+</script>
+
+<script>
+let shapenSupabase=null, shapenAuthMode='login', shapenSession=null;
+const shapenNativeFetch=window.fetch.bind(window);
+window.fetch=(input,init={})=>{
+ const url=typeof input==='string'?input:(input&&input.url)||'';
+ if(url.startsWith('/api/')&&shapenSession?.access_token){
+  const headers=new Headers(init.headers||(input instanceof Request?input.headers:undefined));
+  if(!headers.has('Authorization'))headers.set('Authorization','Bearer '+shapenSession.access_token);
+  init={...init,headers};
+ }
+ return shapenNativeFetch(input,init);
+};
+function setAuthMode(mode){
+ shapenAuthMode=mode;
+ $('loginTab').classList.toggle('active',mode==='login');$('signupTab').classList.toggle('active',mode==='signup');
+ $('authTitle').textContent=mode==='login'?'Bem-vindo de volta':'Crie sua conta';
+ $('authSubtitle').textContent=mode==='login'?'Entre para continuar sua jornada no SHAPEN.':'Comece sua jornada com uma conta segura.';
+ $('authSubmit').textContent=mode==='login'?'Entrar na minha conta':'Criar minha conta';
+ $('authConfirmWrap').classList.toggle('hide',mode!=='signup');
+ $('authPassword').autocomplete=mode==='login'?'current-password':'new-password';
+ $('authMessage').textContent='';
+}
+async function initializeShapenAuth(){
+ try{
+  const r=await fetch('/api/config');const cfg=await r.json();
+  if(!cfg.authConfigured||!cfg.supabaseUrl||!cfg.supabasePublishableKey||!window.supabase?.createClient){
+   $('authForms').classList.add('hide');$('subscriptionGate').classList.add('hide');$('authSetupMissing').classList.remove('hide');
+   $('authSetupMissing').innerHTML='<b>Falta conectar o sistema de contas</b><p>O próximo passo é criar um projeto Supabase e configurar SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY e SUPABASE_SECRET_KEY no Render. O SHAPEN não vai liberar ferramentas pagas antes dessa configuração.</p>';
+   return;
+  }
+  shapenSupabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey);
+  const {data}=await shapenSupabase.auth.getSession();shapenSession=data.session;
+  shapenSupabase.auth.onAuthStateChange((_event,session)=>{shapenSession=session;setTimeout(()=>refreshShapenAccess(),0)});
+  await refreshShapenAccess();
+ }catch(e){$('authMessage').textContent='Não foi possível iniciar o login. Atualize a página e tente novamente.';}
+}
+async function refreshShapenAccess(){
+ if(!shapenSupabase||!shapenSession){
+  $('authForms').classList.remove('hide');$('subscriptionGate').classList.add('hide');$('authSetupMissing').classList.add('hide');$('appShell').style.display='none';return;
+ }
+ $('authForms').classList.add('hide');$('authSetupMissing').classList.add('hide');$('subscriptionGate').classList.remove('hide');$('appShell').style.display='none';
+ try{
+  const r=await fetch('/api/me',{headers:{Authorization:'Bearer '+shapenSession.access_token}});const data=await r.json();
+  if(!r.ok)throw new Error(data.error||'Não foi possível validar sua conta.');
+  if(data.profile?.fitness_profile?.profile){localStorage.setItem('shapen_profile',JSON.stringify(data.profile.fitness_profile.profile));if(data.profile.fitness_profile.plan)localStorage.setItem('shapen_plan',JSON.stringify(data.profile.fitness_profile.plan));loadSaved();}
+  $('authGate').classList.add('hide');$('appShell').style.display='block';
+  const plan=(data.subscription&&['active','authorized'].includes(data.subscription.status))?data.subscription.plan:'gratis';
+  $('topStatus').textContent=plan==='gratis'?'● PLANO GRÁTIS':'● PLANO '+plan.toUpperCase();
+  window.shapenPlan=plan;applyPlanVisibility(plan);
+  const freeNotice=$('freePlanNotice');
+  if(freeNotice)freeNotice.classList.toggle('hide',plan!=='gratis');
+  return;
+ }catch(e){
+  $('authForms').classList.add('hide');$('subscriptionGate').classList.add('hide');$('authSetupMissing').classList.remove('hide');
+  $('authSetupMissing').innerHTML='<b>Não foi possível validar o acesso</b><p>'+escapeHtml(e.message||'Confira a configuração do Supabase e se o arquivo supabase/schema.sql foi executado.')+'</p>';
+ }
+}
+$('authForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!shapenSupabase){$('authMessage').textContent='Sistema de contas ainda não configurado.';return}
+ const email=$('authEmail').value.trim(),password=$('authPassword').value;
+ if(shapenAuthMode==='signup'&&password!==$('authConfirm').value){$('authMessage').textContent='As senhas não coincidem.';return}
+ $('authSubmit').disabled=true;$('authSubmit').textContent='Aguarde...';
+ try{
+  if(shapenAuthMode==='signup'){
+   const {data,error}=await shapenSupabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/'}});if(error)throw error;
+   if(!data.session){setAuthMode('login');$('authMessage').textContent='Quase lá! Enviamos um link de confirmação para '+email+'. Abra o e-mail, clique em “Confirmar e-mail” e depois volte aqui para entrar. Se não encontrar, confira Spam e Promoções.';}
+   else{$('authMessage').textContent='Conta criada com sucesso! Você já pode explorar o SHAPEN no plano grátis.';shapenSession=data.session;await refreshShapenAccess();}
+  }else{
+   const {data,error}=await shapenSupabase.auth.signInWithPassword({email,password});if(error)throw error;
+   shapenSession=data.session;await refreshShapenAccess();
+  }
+ }catch(error){$('authMessage').textContent=error.message||'Não foi possível entrar. Confira e tente novamente.';}
+ finally{$('authSubmit').disabled=false;$('authSubmit').textContent=shapenAuthMode==='login'?'Entrar na minha conta':'Criar minha conta';}
+});
+async function authSignOut(){if(shapenSupabase)await shapenSupabase.auth.signOut();shapenSession=null;$('appShell').style.display='none';$('authGate').classList.remove('hide');setAuthMode('login');}
+function showSubscriptionPlans(){
+ $('appShell').style.display='none';$('authGate').classList.remove('hide');
+ $('authForms').classList.add('hide');$('authSetupMissing').classList.add('hide');$('subscriptionGate').classList.remove('hide');
+ $('checkoutMessage').textContent='Escolha seu plano para desbloquear mais recursos.';
+}
+async function beginCheckout(tier){
+ const msg=$('checkoutMessage');if(!shapenSession){msg.textContent='Entre na sua conta para continuar.';return}
+ const paymentMethod=$('authPaymentMethod').value;msg.textContent='Preparando checkout seguro...';
+ try{
+  const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+shapenSession.access_token},body:JSON.stringify({plan:tier,paymentMethod,email:shapenSession.user.email})});
+  const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível iniciar o pagamento.');
+  if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
+  msg.textContent='Redirecionando para o checkout seguro do Mercado Pago…';window.location.assign(data.checkoutUrl);
+ }catch(e){msg.textContent=e.message||'Falha ao preparar o pagamento.'}
+}
+function applyPlanVisibility(plan){
+ const levels={basico:1,premium:2,ultimate:3};const level=levels[plan]||0;
+ const required={coach:2,progress:1};
+ document.querySelectorAll('.nav[data-page]').forEach(n=>{
+  const page=n.dataset.page;
+  if(page==='coach')n.classList.toggle('hide',level<(required[page]||1));
+ });
+ const ultimateItems=[...document.querySelectorAll('#page-nutrition .card')];
+ // Resource-specific checks are applied again by the server before production use.
+ document.querySelectorAll('[data-plan-min]').forEach(el=>el.classList.toggle('hide',level<(levels[el.dataset.planMin]||1)));
+}
+initializeShapenAuth();
+</script>
+
+</body></html>
