@@ -17,6 +17,8 @@ create table if not exists public.shapen_subscriptions (
   provider text not null default 'mercadopago',
   provider_subscription_id text,
   provider_payment_id text,
+  external_reference text,
+  cancelled_at timestamptz,
   payment_method text not null check (payment_method in ('card','pix')),
   status text not null default 'pending' check (status in ('pending','authorized','active','paused','cancelled','expired','rejected')),
   current_period_end timestamptz,
@@ -27,6 +29,11 @@ create table if not exists public.shapen_subscriptions (
 create unique index if not exists shapen_subscriptions_provider_subscription_id_idx
   on public.shapen_subscriptions(provider, provider_subscription_id)
   where provider_subscription_id is not null;
+
+alter table public.shapen_subscriptions add column if not exists external_reference text;
+alter table public.shapen_subscriptions add column if not exists cancelled_at timestamptz;
+create unique index if not exists shapen_subscriptions_external_reference_idx
+  on public.shapen_subscriptions(external_reference) where external_reference is not null;
 
 create index if not exists shapen_subscriptions_user_status_idx
   on public.shapen_subscriptions(user_id, status, created_at desc);
