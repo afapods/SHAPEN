@@ -9,7 +9,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(helmet({ contentSecurityPolicy: false }));
-app.use(express.json({ limit: "32kb" }));
+app.use(express.json({ limit: "6mb" }));
 app.use("/api/", rateLimit({ windowMs: 60_000, limit: 20, standardHeaders: true, legacyHeaders: false }));
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -171,6 +171,37 @@ app.post("/api/adapt-meals", async (req, res) => {
   }
 });
 
+const SUBSCRIPTION_PLANS = { basico: { title: "SHAPEN Básico", amount: 24.90 }, premium: { title: "SHAPEN Premium", amount: 59.90 }, ultimate: { title: "SHAPEN Ultimate", amount: 99.90 } };
+app.post("/api/checkout", async (req, res) => {
+  const tier = String(req.body?.plan || "");
+  const email = String(req.body?.email || "").trim().slice(0, 160);
+  const chosen = SUBSCRIPTION_PLANS[tier];
+  if (!chosen) return res.status(400).json({ error: "Plano inválido." });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Informe um e-mail válido." });
+  const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  if (!token) return res.status(503).json({ error: "Checkout ainda não ativado: falta configurar MERCADOPAGO_ACCESS_TOKEN nas variáveis do servidor." });
+  try {
+    const baseUrl = String(process.env.APP_URL || "https://shapen.onrender.com").replace(/\/$/, "");
+    const response = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" }, body: JSON.stringify({ reason: chosen.title + " — assinatura mensal", external_reference: "shapen-" + tier + "-" + Date.now(), payer_email: email, auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: chosen.amount, currency_id: "BRL" }, back_url: baseUrl + "/?subscription=return", status: "pending" }) });
+    const data = await response.json();
+    if (!response.ok) { console.error("Mercado Pago checkout error:", response.status, JSON.stringify(data).slice(0, 1000)); return res.status(502).json({ error: "O Mercado Pago não conseguiu criar o checkout. Confira as credenciais e a configuração da conta." }); }
+    if (!data.init_point) return res.status(502).json({ error: "O Mercado Pago não retornou o link seguro de pagamento." });
+    return res.json({ checkoutUrl: data.init_point, subscriptionId: data.id, plan: tier, amount: chosen.amount });
+  } catch (e) { console.error("checkout error:", e.message); return res.status(502).json({ error: "Não foi possível conectar ao Mercado Pago agora." }); }
+});
+app.post("/api/food-photo", async (req, res) => {
+  const image = String(req.body?.image || "");
+  if (!/^data:image\/(jpeg|jpg|png|webp);base64,/.test(image) || image.length > 5500000) return res.status(400).json({ error: "Envie uma foto JPG, PNG ou WebP de até 4 MB." });
+  try {
+    const openai = client();
+    const response = await openai.chat.completions.create({ model: process.env.OPENAI_MODEL || "gpt-4.1-mini", temperature: 0.2, response_format: { type: "json_object" }, messages: [
+      { role: "system", content: `Você é um assistente educativo de registro alimentar. Analise apenas o que é visualmente provável. Nunca afirme certeza sobre ingredientes, peso ou calorias. Não diagnostique nem prescreva. Responda SOMENTE JSON válido no formato: {"foods":"alimentos prováveis","portion":"porção visual aproximada","note":"limitações e necessidade de confirmar"}. Se não puder identificar, diga isso claramente.` },
+      { role: "user", content: [{ type: "text", text: "Descreva os alimentos visíveis e uma estimativa visual grosseira de porção. Não estime calorias. A pessoa vai revisar e corrigir a resposta." }, { type: "image_url", image_url: { url: image, detail: "low" } }] }
+    ] });
+    const parsed = JSON.parse(response.choices?.[0]?.message?.content || "{}");
+    return res.json({ foods: String(parsed.foods || "Não foi possível identificar com confiança.").slice(0, 500), portion: String(parsed.portion || "Porção não estimada.").slice(0, 250), note: String(parsed.note || "Estimativa visual incerta; revise ingredientes e porções.").slice(0, 500) });
+  } catch (e) { console.error("food-photo error:", e.message); return res.status(e.status || 502).json({ error: e.status === 503 ? e.message : "Não foi possível analisar a foto. Tente uma imagem mais nítida." }); }
+});
 app.get("/api/health", (_req, res) => res.json({ ok: true, aiConfigured: Boolean(process.env.OPENAI_API_KEY) }));
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 app.listen(PORT, () => console.log(`SHAPEN rodando em http://localhost:${PORT}`));
