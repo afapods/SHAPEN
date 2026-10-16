@@ -87,10 +87,13 @@ function requireShapenPlan(minimumPlan) {
           "&order=created_at.desc&limit=20"
       );
       const now = Date.now();
-      const active = (Array.isArray(rows) ? rows : []).find((item) =>
-        ["active", "authorized"].includes(String(item.status || "").toLowerCase()) &&
-        (!item.current_period_end || new Date(item.current_period_end).getTime() > now)
-      );
+      const active = (Array.isArray(rows) ? rows : []).find((item) => {
+        const status = String(item.status || "").toLowerCase();
+        const periodEnd = item.current_period_end ? new Date(item.current_period_end).getTime() : null;
+        if (periodEnd !== null && (!Number.isFinite(periodEnd) || periodEnd <= now)) return false;
+        return ["active", "authorized"].includes(status) ||
+          (status === "cancelled" && periodEnd !== null && periodEnd > now);
+      });
       if (!active || (levels[active.plan] || 0) < (levels[minimumPlan] || 99)) {
         return res.status(403).json({
           error: "Este recurso exige um plano SHAPEN " + String(minimumPlan).toUpperCase() + " ativo."
@@ -265,10 +268,16 @@ app.get("/api/me", authenticateSupabaseRequest, async (req, res) => {
   try {
     const [profiles, subscriptions] = await Promise.all([
       supabaseAdminRequest(req.shapenSupabase, "shapen_profiles?select=display_name,fitness_profile&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&limit=1"),
-      supabaseAdminRequest(req.shapenSupabase, "shapen_subscriptions?select=plan,status,payment_method,current_period_end,created_at&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&order=created_at.desc&limit=10")
+      supabaseAdminRequest(req.shapenSupabase, "shapen_subscriptions?select=plan,status,payment_method,current_period_end,created_at,cancelled_at,external_reference&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&order=created_at.desc&limit=10")
     ]);
-    const active = (subscriptions || []).find(x => ["active", "authorized"].includes(x.status) && (!x.current_period_end || new Date(x.current_period_end).getTime() > Date.now())) || null;
-    return res.json({ user: req.shapenUser, profile: profiles?.[0] || null, subscription: active, subscriptions: subscriptions || [], authConfigured: true });
+    const now = Date.now();
+    const active = (subscriptions || []).find(x => {
+      const status = String(x.status || "").toLowerCase();
+      const end = x.current_period_end ? new Date(x.current_period_end).getTime() : null;
+      return (!end || end > now) && (["active", "authorized"].includes(status) || (status === "cancelled" && end !== null && end > now));
+    }) || null;
+    const latestSubscription = (subscriptions || [])[0] || null;
+    return res.json({ user: req.shapenUser, profile: profiles?.[0] || null, subscription: active, latestSubscription, subscriptions: subscriptions || [], authConfigured: true });
   } catch (error) {
     return res.status(502).json({ error: "Não foi possível carregar sua conta. Confira se o schema do Supabase foi aplicado." });
   }
@@ -300,6 +309,7 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
   try {
     const baseUrl = String(process.env.APP_URL || "https://shapen.onrender.com").replace(/\/$/, "");
     const headers = { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
+    const externalReference = req.shapenUser.id + "|" + tier + "|" + crypto.randomUUID();
     let response;
     if (paymentMethod === "pix") {
       // Pix checkout is a one-time payment. The customer must pay again each month.
@@ -308,7 +318,7 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
         body: JSON.stringify({
           items: [{ id: "shapen-" + tier, title: chosen.title + " — acesso por 1 mês", quantity: 1, unit_price: chosen.amount, currency_id: "BRL" }],
           payer: { email },
-          external_reference: req.shapenUser.id + "|" + tier,
+          external_reference: externalReference,
           notification_url: baseUrl + "/api/mercadopago/webhook",
           back_urls: { success: baseUrl + "/app.html?payment=success", failure: baseUrl + "/app.html?payment=failure", pending: baseUrl + "/app.html?payment=pending" },
           auto_return: "approved",
@@ -337,7 +347,7 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
     try {
       await supabaseAdminRequest(req.shapenSupabase, "shapen_subscriptions", {
         method: "POST", headers: { Prefer: "return=minimal" },
-        body: JSON.stringify({ user_id: req.shapenUser.id, plan: tier, provider: "mercadopago", provider_subscription_id: paymentMethod === "card" ? String(data.id) : null, payment_method: paymentMethod, status: "pending" })
+        body: JSON.stringify({ user_id: req.shapenUser.id, plan: tier, provider: "mercadopago", provider_subscription_id: paymentMethod === "card" ? String(data.id) : null, external_reference: externalReference, payment_method: paymentMethod, status: "pending" })
       });
     } catch (dbError) {
       console.error("Could not persist pending checkout:", dbError.message);
@@ -346,6 +356,65 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
     return res.json({ checkoutUrl, paymentId: data.id, plan: tier, amount: chosen.amount, paymentMethod, recurring: paymentMethod === "card" });
   } catch (e) { console.error("checkout error:", e.message); return res.status(502).json({ error: "Não foi possível conectar ao Mercado Pago agora." }); }
 });
+app.post("/api/subscription/cancel", authenticateSupabaseRequest, async (req, res) => {
+  const cfg = req.shapenSupabase;
+  const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  if (!token) return res.status(503).json({ error: "Cancelamento automático indisponível: o Mercado Pago não está configurado no servidor." });
+  try {
+    const rows = await supabaseAdminRequest(cfg,
+      "shapen_subscriptions?select=id,plan,status,payment_method,provider_subscription_id,current_period_end,external_reference&user_id=eq." +
+      encodeURIComponent(req.shapenUser.id) + "&provider=eq.mercadopago&payment_method=eq.card&order=created_at.desc&limit=10");
+    const row = (rows || []).find(x => ["active", "authorized", "pending"].includes(String(x.status || "").toLowerCase()) && x.provider_subscription_id);
+    if (!row) return res.status(404).json({ error: "Não encontramos uma assinatura recorrente de cartão ativa para cancelar. O Pix não gera renovação automática." });
+    const getResponse = await fetch("https://api.mercadopago.com/preapproval/" + encodeURIComponent(row.provider_subscription_id), {
+      headers: { Authorization: "Bearer " + token }
+    });
+    const remote = await getResponse.json();
+    if (!getResponse.ok) {
+      console.error("Mercado Pago subscription lookup failed:", getResponse.status, JSON.stringify(remote).slice(0, 500));
+      return res.status(502).json({ error: "Não foi possível confirmar a assinatura no Mercado Pago. Nenhuma alteração local foi feita; tente novamente." });
+    }
+    const expectedPrefix = req.shapenUser.id + "|" + row.plan + "|";
+    if (!String(remote.external_reference || "").startsWith(expectedPrefix)) {
+      return res.status(409).json({ error: "Não foi possível confirmar que esta assinatura pertence à sua conta. Entre em contato com o suporte." });
+    }
+    if (["cancelled", "canceled"].includes(String(remote.status || "").toLowerCase())) {
+      const periodEnd = remote.next_payment_date && new Date(remote.next_payment_date).getTime() > Date.now()
+        ? new Date(remote.next_payment_date).toISOString() : row.current_period_end || null;
+      await supabaseAdminRequest(cfg, "shapen_subscriptions?id=eq." + encodeURIComponent(row.id), {
+        method: "PATCH", headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ status: "cancelled", current_period_end: periodEnd, cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+      });
+      return res.json({ ok: true, status: "cancelled", currentPeriodEnd: periodEnd, message: "A assinatura já estava cancelada no Mercado Pago." });
+    }
+    const periodEnd = remote.next_payment_date && new Date(remote.next_payment_date).getTime() > Date.now()
+      ? new Date(remote.next_payment_date).toISOString() : null;
+    const cancelResponse = await fetch("https://api.mercadopago.com/preapproval/" + encodeURIComponent(row.provider_subscription_id), {
+      method: "PUT",
+      headers: { Authorization: "Bearer " + token, "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "canceled" })
+    });
+    const cancelledRemote = await cancelResponse.json();
+    if (!cancelResponse.ok || !["cancelled", "canceled"].includes(String(cancelledRemote.status || "").toLowerCase())) {
+      console.error("Mercado Pago cancellation failed:", cancelResponse.status, JSON.stringify(cancelledRemote).slice(0, 500));
+      return res.status(502).json({ error: "O Mercado Pago não confirmou o cancelamento. Não considere sua assinatura cancelada; tente novamente ou contate o suporte." });
+    }
+    const confirmedEnd = cancelledRemote.next_payment_date && new Date(cancelledRemote.next_payment_date).getTime() > Date.now()
+      ? new Date(cancelledRemote.next_payment_date).toISOString() : periodEnd;
+    await supabaseAdminRequest(cfg, "shapen_subscriptions?id=eq." + encodeURIComponent(row.id), {
+      method: "PATCH", headers: { Prefer: "return=minimal" },
+      body: JSON.stringify({ status: "cancelled", current_period_end: confirmedEnd, cancelled_at: new Date().toISOString(), updated_at: new Date().toISOString() })
+    });
+    return res.json({
+      ok: true, status: "cancelled", currentPeriodEnd: confirmedEnd,
+      message: confirmedEnd ? "Cancelamento confirmado. Não haverá novas renovações; o acesso permanece até o fim do período indicado." : "Cancelamento confirmado no Mercado Pago. Não haverá novas renovações; como o provedor não confirmou uma data final do período pago, o acesso pago foi encerrado."
+    });
+  } catch (error) {
+    console.error("SHAPEN cancellation failed:", error.message);
+    return res.status(502).json({ error: "Não foi possível concluir o cancelamento agora. Verifique sua conexão e tente novamente." });
+  }
+});
+
 app.post("/api/food-photo", authenticateSupabaseRequest, requireShapenPlan("ultimate"), async (req, res) => {
   const image = String(req.body?.image || "");
   if (!/^data:image\/(jpeg|jpg|png|webp);base64,/.test(image) || image.length > 5500000) return res.status(400).json({ error: "Envie uma foto JPG, PNG ou WebP de até 4 MB." });
@@ -375,11 +444,16 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
       const parts = String(item.external_reference || "").split("|");
       const userId = parts[0], tier = parts[1];
       if (!userId || !SUBSCRIPTION_PLANS[tier]) return res.status(200).json({ received: true, ignored: true });
-      const map = { authorized: "active", paused: "paused", cancelled: "cancelled", canceled: "cancelled", pending: "pending" };
+      const map = { authorized: "active", paused: "paused", cancelled: "cancelled", canceled: "cancelled", pending: "pending", rejected: "rejected" };
       const status = map[String(item.status || "").toLowerCase()] || "pending";
+      const periodEnd = item.next_payment_date && new Date(item.next_payment_date).getTime() > Date.now()
+        ? new Date(item.next_payment_date).toISOString() : null;
+      const patch = { user_id: userId, plan: tier, provider: "mercadopago", provider_subscription_id: String(item.id), external_reference: String(item.external_reference), payment_method: "card", status, updated_at: new Date().toISOString() };
+      if (periodEnd) patch.current_period_end = periodEnd;
+      if (status === "cancelled") patch.cancelled_at = new Date().toISOString();
       await supabaseAdminRequest(cfg, "shapen_subscriptions?provider_subscription_id=eq." + encodeURIComponent(String(item.id)), {
         method: "PATCH", headers: { Prefer: "return=minimal" },
-        body: JSON.stringify({ user_id: userId, plan: tier, provider: "mercadopago", provider_subscription_id: String(item.id), payment_method: "card", status, updated_at: new Date().toISOString() })
+        body: JSON.stringify(patch)
       });
       return res.status(200).json({ received: true, verified: true });
     }
@@ -387,11 +461,12 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
       const response = await fetch("https://api.mercadopago.com/v1/payments/" + encodeURIComponent(resourceId), { headers });
       const payment = await response.json();
       if (!response.ok) return res.status(200).json({ received: true, verified: false });
-      const parts = String(payment.external_reference || "").split("|");
+      const externalReference = String(payment.external_reference || "");
+      const parts = externalReference.split("|");
       const userId = parts[0], tier = parts[1];
-      if (!userId || !SUBSCRIPTION_PLANS[tier] || payment.status !== "approved") return res.status(200).json({ received: true, ignored: true });
+      if (!userId || !SUBSCRIPTION_PLANS[tier] || payment.status !== "approved" || !parts[2]) return res.status(200).json({ received: true, ignored: true });
       const end = new Date(Date.now() + 30 * 86400000).toISOString();
-      await supabaseAdminRequest(cfg, "shapen_subscriptions?user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=eq.pending", {
+      await supabaseAdminRequest(cfg, "shapen_subscriptions?external_reference=eq." + encodeURIComponent(externalReference) + "&user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=eq.pending", {
         method: "PATCH", headers: { Prefer: "return=minimal" },
         body: JSON.stringify({ provider_payment_id: String(payment.id), status: "active", current_period_end: end, updated_at: new Date().toISOString() })
       });
