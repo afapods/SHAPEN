@@ -66,7 +66,7 @@
 .auth-panel{background:linear-gradient(155deg,#38264c,#281b35);border:1px solid var(--line);border-radius:25px;padding:28px;box-shadow:0 25px 70px #10091666}.auth-panel h2{font-size:25px;letter-spacing:-.8px;margin:8px 0 4px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#21162c;padding:5px;border-radius:13px;margin-bottom:22px}.auth-tab{border:0;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:800}.auth-tab.active{background:#4a3265;color:var(--text)}.auth-submit{width:100%;margin-top:6px}.auth-message{min-height:20px;color:var(--lime);font-size:12px;margin:12px 0}.auth-legal,.auth-footer{font-size:11px;color:#a99ab8;line-height:1.6}.auth-footer{text-align:center;margin-top:28px}.auth-plan{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.auth-plan b,.auth-plan small{display:block}.auth-plan small{color:var(--muted);font-size:11px}.auth-plan strong{font-size:16px;white-space:nowrap}.auth-plan strong span{font-size:10px;color:var(--muted);font-weight:400}.auth-plan button{grid-column:1/-1;width:100%;padding:9px}.auth-plan.featured{background:#4b326522;border:1px solid #9c7ec4;border-radius:13px;padding:13px;margin:8px -4px}.auth-plan:last-of-type{margin-bottom:12px}
 @media(max-width:800px){.auth-grid{grid-template-columns:1fr;gap:25px;min-height:auto}.auth-story h1{font-size:42px;letter-spacing:-2px}.auth-story>p{font-size:14px}.auth-brand{margin-bottom:26px}.auth-panel{padding:21px}.auth-gate{padding:18px 15px}.auth-story .auth-benefit{margin:12px 0}}
 
-</style>
+.locked-nav{opacity:.86}.lock-label{margin-left:auto;font-size:10px;opacity:.9}.locked-feature{position:relative;cursor:pointer;border-color:#c2a0ff70!important}.locked-feature:after{content:"🔒 Desbloquear no plano "+attr(data-plan-min);display:none}.locked-feature:hover{border-color:#c2a0ff!important;box-shadow:0 0 0 1px #c2a0ff22}</style>
 </head>
 <body>
 
@@ -306,7 +306,17 @@ const $=id=>document.getElementById(id);
 const GOALS={muscle:'Hipertrofia',fat:'Reduzir gordura',fitness:'Condicionamento',recomp:'Recomposição'};
 const STEPS=['Seu objetivo','Seu ponto de partida','Sua rotina de treino','Sua alimentação','Segurança'];
 let currentStep=0, profile=null, plan=null, done=new Set(), todayKey=new Date().toISOString().slice(0,10);
-function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+name));document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===name));if(name==='workout')renderWorkout();if(name==='nutrition'){renderNutrition();renderFoodJournal();}if(name==='home')renderHome();if(name==='plans')renderPlanSelection();if(name==='progress'){renderProgress();buildWeeklyReview();}window.scrollTo({top:0,behavior:'smooth'});}
+function shapenPlanLevel(planName){return ({gratis:0,basico:1,premium:2,ultimate:3})[planName]||0}
+function shapenRequiredPlan(page){return ({workout:'basico',nutrition:'basico',progress:'basico',coach:'premium'})[page]||null}
+function showPage(name){
+ const required=shapenRequiredPlan(name);
+ if(required&&shapenPlanLevel(window.shapenPlan)<shapenPlanLevel(required)){
+  showSubscriptionPlans();
+  const msg=$('checkoutMessage');
+  if(msg)msg.textContent='🔒 '+({workout:'Seu treino personalizado',nutrition:'Sua área de nutrição',progress:'Seu acompanhamento de evolução',coach:'O Copiloto SHAPEN'})[name]+' faz parte do plano '+required.toUpperCase()+'. Escolha um plano para desbloquear esse recurso.';
+  return;
+ }
+ document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+name));document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===name));if(name==='workout')renderWorkout();if(name==='nutrition'){renderNutrition();renderFoodJournal();}if(name==='home')renderHome();if(name==='plans')renderPlanSelection();if(name==='progress'){renderProgress();buildWeeklyReview();}window.scrollTo({top:0,behavior:'smooth'});}
 document.querySelectorAll('.nav').forEach(n=>n.addEventListener('click',()=>showPage(n.dataset.page)));
 function updateWizard(){document.querySelectorAll('.wizard').forEach(w=>w.classList.toggle('hide',+w.dataset.step!==currentStep));$('stepNumber').textContent=currentStep+1;$('stepTitle').textContent=STEPS[currentStep];$('stepCount').textContent=`Etapa ${currentStep+1} de ${STEPS.length}`;$('stepBar').style.width=((currentStep+1)/STEPS.length*100)+'%';$('prevBtn').disabled=currentStep===0;$('nextBtn').classList.toggle('hide',currentStep===4);$('generateBtn').classList.toggle('hide',currentStep!==4);document.querySelectorAll('.choice input').forEach(i=>i.closest('.choice').classList.toggle('selected',i.checked));}
 document.querySelectorAll('.choice input').forEach(i=>i.addEventListener('change',updateWizard));
@@ -591,15 +601,20 @@ async function beginCheckout(tier){
  }catch(e){msg.textContent=e.message||'Falha ao preparar o pagamento.'}
 }
 function applyPlanVisibility(plan){
- const levels={basico:1,premium:2,ultimate:3};const level=levels[plan]||0;
- const required={coach:2,progress:1};
+ const levels={gratis:0,basico:1,premium:2,ultimate:3};const level=levels[plan]||0;
  document.querySelectorAll('.nav[data-page]').forEach(n=>{
-  const page=n.dataset.page;
-  if(page==='coach')n.classList.toggle('hide',level<(required[page]||1));
+  const page=n.dataset.page,required=shapenRequiredPlan(page),locked=Boolean(required&&level<(levels[required]||99));
+  n.classList.toggle('locked-nav',locked);
+  let badge=n.querySelector('.lock-label');
+  if(locked&&!badge){badge=document.createElement('span');badge.className='lock-label';badge.textContent='🔒';badge.setAttribute('aria-label','Recurso pago');n.appendChild(badge);}
+  if(!locked&&badge)badge.remove();
  });
- const ultimateItems=[...document.querySelectorAll('#page-nutrition .card')];
- // Resource-specific checks are applied again by the server before production use.
- document.querySelectorAll('[data-plan-min]').forEach(el=>el.classList.toggle('hide',level<(levels[el.dataset.planMin]||1)));
+ document.querySelectorAll('[data-plan-min]').forEach(el=>{
+  const locked=level<(levels[el.dataset.planMin]||99);
+  el.classList.toggle('locked-feature',locked);
+  if(locked){el.setAttribute('aria-label','Recurso bloqueado: plano '+el.dataset.planMin);el.setAttribute('title','Disponível no plano '+el.dataset.planMin.toUpperCase()+' ou superior');}
+  else{el.removeAttribute('aria-label');el.removeAttribute('title');}
+ });
 }
 initializeShapenAuth();
 </script>
