@@ -309,6 +309,7 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
           items: [{ id: "shapen-" + tier, title: chosen.title + " — acesso por 1 mês", quantity: 1, unit_price: chosen.amount, currency_id: "BRL" }],
           payer: { email },
           external_reference: req.shapenUser.id + "|" + tier,
+          notification_url: baseUrl + "/api/mercadopago/webhook",
           back_urls: { success: baseUrl + "/app.html?payment=success", failure: baseUrl + "/app.html?payment=failure", pending: baseUrl + "/app.html?payment=pending" },
           auto_return: "approved",
           payment_methods: { excluded_payment_types: [{ id: "credit_card" }, { id: "debit_card" }, { id: "ticket" }, { id: "account_money" }, { id: "prepaid_card" }] }
@@ -322,6 +323,7 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
           reason: chosen.title + " — assinatura mensal",
           external_reference: req.shapenUser.id + "|" + tier,
           payer_email: email,
+          notification_url: baseUrl + "/api/mercadopago/webhook",
           auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: chosen.amount, currency_id: "BRL" },
           back_url: baseUrl + "/app.html?subscription=return",
           status: "pending"
