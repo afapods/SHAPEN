@@ -540,7 +540,7 @@ $('authForm').addEventListener('submit',async e=>{
  $('authSubmit').disabled=true;$('authSubmit').textContent='Aguarde...';
  try{
   if(shapenAuthMode==='signup'){
-   const {data,error}=await shapenSupabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/'}});if(error)throw error;
+   const {data,error}=await shapenSupabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/app.html'}});if(error)throw error;
    if(!data.session){setAuthMode('login');$('authMessage').textContent='Quase lá! Enviamos um link de confirmação para '+email+'. Abra o e-mail, clique em “Confirmar e-mail” e depois volte aqui para entrar. Se não encontrar, confira Spam e Promoções.';}
    else{$('authMessage').textContent='Conta criada com sucesso! Você já pode explorar o SHAPEN no plano grátis.';shapenSession=data.session;await refreshShapenAccess();}
   }else{
