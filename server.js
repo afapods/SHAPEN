@@ -73,6 +73,38 @@ async function supabaseAdminRequest(cfg, route, options = {}) {
   }
   return data;
 }
+function requireShapenPlan(minimumPlan) {
+  const levels = { basico: 1, premium: 2, ultimate: 3 };
+  return async (req, res, next) => {
+    try {
+      if (!req.shapenUser?.id || !req.shapenSupabase) {
+        return res.status(401).json({ error: "Entre na sua conta para continuar." });
+      }
+      const rows = await supabaseAdminRequest(
+        req.shapenSupabase,
+        "shapen_subscriptions?select=plan,status,current_period_end&user_id=eq." +
+          encodeURIComponent(req.shapenUser.id) +
+          "&order=created_at.desc&limit=20"
+      );
+      const now = Date.now();
+      const active = (Array.isArray(rows) ? rows : []).find((item) =>
+        ["active", "authorized"].includes(String(item.status || "").toLowerCase()) &&
+        (!item.current_period_end || new Date(item.current_period_end).getTime() > now)
+      );
+      if (!active || (levels[active.plan] || 0) < (levels[minimumPlan] || 99)) {
+        return res.status(403).json({
+          error: "Este recurso exige um plano SHAPEN " + String(minimumPlan).toUpperCase() + " ativo."
+        });
+      }
+      req.shapenPlan = active.plan;
+      return next();
+    } catch (error) {
+      console.error("SHAPEN plan access check failed:", error.message);
+      return res.status(502).json({ error: "Não foi possível verificar seu plano agora." });
+    }
+  };
+}
+
 function cleanProfile(p) {
   if (!p || typeof p !== "object") throw new Error("Perfil ausente.");
   const age = Number(p.age), weight = Number(p.weight), height = Number(p.height);
