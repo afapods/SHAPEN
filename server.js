@@ -277,11 +277,17 @@ function requireShapenAdmin(req, res, next) {
 app.get("/api/admin/overview", authenticateSupabaseRequest, requireShapenAdmin, async (req, res) => {
   try {
     const cfg = req.shapenSupabase;
-    const [subscriptions, profiles] = await Promise.all([
+    const [subscriptions, profiles, authResponse] = await Promise.all([
       supabaseAdminRequest(cfg, "shapen_subscriptions?select=id,user_id,plan,status,payment_method,provider,provider_subscription_id,provider_payment_id,current_period_end,created_at,cancelled_at,external_reference&order=created_at.desc&limit=1000"),
-      supabaseAdminRequest(cfg, "shapen_profiles?select=user_id,display_name&limit=1000")
+      supabaseAdminRequest(cfg, "shapen_profiles?select=user_id,display_name&limit=1000"),
+      fetch(cfg.url + "/auth/v1/admin/users?page=1&per_page=1000", {
+        headers: { apikey: cfg.secretKey, Authorization: "Bearer " + cfg.secretKey }
+      })
     ]);
+    if (!authResponse.ok) throw new Error("Não foi possível consultar os usuários do Supabase Auth.");
+    const authData = await authResponse.json();
     const profileByUser = new Map((Array.isArray(profiles) ? profiles : []).map(p => [p.user_id, p.display_name]));
+    const emailByUser = new Map((Array.isArray(authData.users) ? authData.users : []).map(u => [u.id, u.email || ""]));
     const all = Array.isArray(subscriptions) ? subscriptions : [];
     const now = Date.now();
     const activeStatuses = new Set(["active", "authorized"]);
@@ -293,7 +299,7 @@ app.get("/api/admin/overview", authenticateSupabaseRequest, requireShapenAdmin, 
     const monthlyRevenue = active.reduce((sum, s) => sum + (amount[s.plan] || 0), 0);
     const paid = all.filter(s => ["active", "authorized", "cancelled"].includes(String(s.status).toLowerCase()));
     const recent = all.slice(0, 100).map(s => ({
-      id: s.id, userId: s.user_id, customer: profileByUser.get(s.user_id) || "Cliente SHAPEN",
+      id: s.id, userId: s.user_id, customer: profileByUser.get(s.user_id) || "Cliente SHAPEN", email: emailByUser.get(s.user_id) || "",
       plan: s.plan, status: s.status, paymentMethod: s.payment_method, provider: s.provider,
       createdAt: s.created_at, currentPeriodEnd: s.current_period_end, cancelledAt: s.cancelled_at
     }));
