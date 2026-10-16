@@ -624,9 +624,10 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
         return res.status(200).json({ received: true, verified: true });
       }
       if (["rejected", "cancelled", "refunded", "charged_back"].includes(paymentStatus)) {
-        await supabaseAdminRequest(cfg, "shapen_subscriptions?external_reference=eq." + encodeURIComponent(externalReference) + "&user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=eq.pending", {
+        // Revoke Pix access if a previously approved payment is later refunded or charged back.
+        await supabaseAdminRequest(cfg, "shapen_subscriptions?external_reference=eq." + encodeURIComponent(externalReference) + "&user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=in.(pending,active)", {
           method: "PATCH", headers: { Prefer: "return=minimal" },
-          body: JSON.stringify({ provider_payment_id: String(payment.id), status: "rejected", updated_at: new Date().toISOString() })
+          body: JSON.stringify({ provider_payment_id: String(payment.id), status: "rejected", current_period_end: null, updated_at: new Date().toISOString() })
         });
       }
       return res.status(200).json({ received: true, verified: true, paymentStatus });
@@ -643,7 +644,8 @@ app.get("/api/health", (_req, res) => {
     ok: true,
     aiConfigured: Boolean(process.env.OPENAI_API_KEY),
     authConfigured: Boolean(cfg.url && cfg.publishableKey && cfg.secretKey),
-    mercadopagoConfigured: Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN)
+    mercadopagoConfigured: Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN),
+    mercadopagoWebhookSecure: Boolean(process.env.MERCADOPAGO_WEBHOOK_SECRET)
   });
 });
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
