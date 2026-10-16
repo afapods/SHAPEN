@@ -95,11 +95,11 @@
         <p class="auth-legal">Ao continuar, você concorda em usar o SHAPEN como ferramenta educativa de bem-estar. Não substitui orientação profissional de saúde.</p>
       </div>
       <div id="subscriptionGate" class="hide">
-        <div class="eyebrow">ESCOLHA SEU ACESSO</div><h2>Seu plano, seu ritmo.</h2><p class="muted small">Escolha um plano para continuar. As ferramentas serão liberadas após a confirmação da assinatura.</p>
-        <div class="auth-plan"><div><b>Básico</b><small>Treino, refeições e progresso básico</small></div><strong>R$ 24,90<span>/mês</span></strong><button class="btn secondary" onclick="beginCheckout('basico')">Escolher Básico</button></div>
-        <div class="auth-plan featured"><div><b>Premium</b><small>Copiloto e adaptações com IA</small></div><strong>R$ 59,90<span>/mês</span></strong><button class="btn" onclick="beginCheckout('premium')">Escolher Premium</button></div>
-        <div class="auth-plan"><div><b>Ultimate</b><small>Diário por foto e ferramentas avançadas</small></div><strong>R$ 99,90<span>/mês</span></strong><button class="btn secondary" onclick="beginCheckout('ultimate')">Escolher Ultimate</button></div>
-        <div class="formrow"><label class="label" for="authPaymentMethod">Forma de pagamento</label><select id="authPaymentMethod" class="field"><option value="card">Cartão de crédito — mensal recorrente</option><option value="pix">Pix — pagamento de um mês</option></select></div>
+        <div class="eyebrow">ESCOLHA SEU ACESSO</div><h2>Seu plano, seu ritmo.</h2><p class="muted small">Primeiro escolha como deseja pagar. Essa escolha acontece aqui no SHAPEN, antes de abrir o ambiente seguro do Mercado Pago.</p>
+        <div class="formrow"><label class="label" for="authPaymentMethod">Como você prefere pagar?</label><select id="authPaymentMethod" class="field" required><option value="card">Cartão de crédito · assinatura com renovação automática mensal</option><option value="pix">Pix · pagamento de 1 mês, sem renovação automática</option></select><p class="muted small" id="paymentMethodHelp">No cartão, a cobrança se renova mensalmente até você cancelar. Se o checkout do Mercado Pago não aceitar seu cartão, volte aqui e selecione Pix.</p></div>
+        <div class="auth-plan"><div><b>Básico</b><small>Treino, refeições e progresso básico</small></div><strong>R$ 24,90<span>/mês</span></strong><button class="btn secondary" type="button" onclick="beginCheckout('basico')">Continuar com Básico</button></div>
+        <div class="auth-plan featured"><div><b>Premium</b><small>Copiloto e adaptações com IA</small></div><strong>R$ 59,90<span>/mês</span></strong><button class="btn" type="button" onclick="beginCheckout('premium')">Continuar com Premium</button></div>
+        <div class="auth-plan"><div><b>Ultimate</b><small>Diário por foto e ferramentas avançadas</small></div><strong>R$ 99,90<span>/mês</span></strong><button class="btn secondary" type="button" onclick="beginCheckout('ultimate')">Continuar com Ultimate</button></div>
         <p class="auth-message" id="checkoutMessage" aria-live="polite"></p>
         <button class="btn secondary hide" id="verifyPaymentBtn" type="button" onclick="verifyPaymentStatus()">Já paguei — verificar acesso</button>
         <button class="btn ghost" onclick="authSignOut()">Sair da conta</button>
@@ -593,6 +593,17 @@ function showSubscriptionPlans(){
  $('checkoutMessage').textContent='Escolha seu plano para desbloquear mais recursos.';
 }
 let checkoutInProgress=false;
+(function configurePaymentChoice(){
+ const select=$('authPaymentMethod'), help=$('paymentMethodHelp');
+ if(!select||!help)return;
+ const update=()=>{
+  help.textContent=select.value==='pix'
+   ? 'O Pix abre uma página de pagamento separada do checkout de assinatura. O acesso é liberado após a confirmação do pagamento; será necessário pagar novamente para renovar o mês seguinte.'
+   : 'No cartão, a cobrança se renova mensalmente até você cancelar. Se o Mercado Pago deixar Confirmar desabilitado, volte e escolha Pix nesta tela.';
+ };
+ select.addEventListener('change',update);
+ update();
+})();
 async function beginCheckout(tier){
  const msg=$('checkoutMessage');
  if(checkoutInProgress){msg.textContent='Já estamos preparando seu checkout. Aguarde o redirecionamento para evitar tentativas duplicadas.';return}
