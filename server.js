@@ -124,6 +124,53 @@ app.post("/api/coach", async (req, res) => {
   }
 });
 
+
+app.post("/api/adapt-meals", async (req, res) => {
+  const request = String(req.body?.request || "").trim().slice(0, 400);
+  if (!request) return res.status(400).json({ error: "Conte o que deseja mudar no cardápio." });
+  const rawProfile = req.body?.profile;
+  const rawPlan = req.body?.plan;
+  if (!rawProfile || typeof rawProfile !== "object" || !rawPlan || typeof rawPlan !== "object") {
+    return res.status(400).json({ error: "Configure seu perfil e gere um plano antes de adaptar as refeições." });
+  }
+  try {
+    const openai = client();
+    const profile = JSON.stringify({
+      goal: rawProfile.goal, age: rawProfile.age, diet: rawProfile.diet,
+      meals: rawProfile.meals, budget: rawProfile.budget, cooking: rawProfile.cooking,
+      avoid: rawProfile.avoid, limitations: rawProfile.limitations, conditions: rawProfile.conditions
+    }).slice(0, 1800);
+    const currentMeals = JSON.stringify(Array.isArray(rawPlan.meals) ? rawPlan.meals.slice(0, 6) : []).slice(0, 3000);
+    const response = await openai.chat.completions.create({
+      model: process.env.OPENAI_MODEL || "gpt-4.1-mini",
+      temperature: 0.4,
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: `Você é o assistente de alimentação educativa do SHAPEN. Responda em português brasileiro e devolva SOMENTE JSON válido neste formato: {"title":"Cardápio adaptado","summary":"uma frase curta","meals":[{"icon":"☀️","title":"Café da manhã","desc":"alimentos e quantidades flexíveis quando apropriado","alt":"uma substituição prática"}]}. Monte um cardápio visual, não escreva um texto corrido. Cada refeição deve ser um cartão com título, descrição objetiva e alternativa. Preserve o número de refeições indicado no perfil, até 5. Respeite o estilo alimentar, orçamento, tempo de preparo, alergias e itens evitados; não recomende ingredientes de risco se houver dúvida. Não diagnostique nem prescreva dieta clínica, não incentive restrição extrema e não prometa resultados. Quantidades são apenas sugestões gerais e devem ser ajustadas por nutricionista.` },
+        { role: "user", content: `Pedido de adaptação: ${request}\nPerfil: ${profile}\nRefeições atuais: ${currentMeals}\nGere um novo conjunto de refeições que aplique o pedido, respeitando o perfil. Retorne somente o JSON pedido.` }
+      ]
+    });
+    const raw = response.choices?.[0]?.message?.content;
+    if (!raw) throw new Error("A IA não retornou um cardápio.");
+    const parsed = JSON.parse(raw);
+    const meals = Array.isArray(parsed.meals) ? parsed.meals.slice(0, 5).map((m, i) => ({
+      icon: String(m.icon || "◉").slice(0, 8),
+      title: String(m.title || `Refeição ${i + 1}`).slice(0, 80),
+      desc: String(m.desc || "Opção flexível").slice(0, 300),
+      alt: String(m.alt || "Escolha uma alternativa compatível").slice(0, 300)
+    })) : [];
+    if (!meals.length) throw new Error("A IA retornou um cardápio vazio.");
+    return res.json({
+      title: String(parsed.title || "Cardápio adaptado").slice(0, 100),
+      summary: String(parsed.summary || "Sugestões flexíveis para seu perfil.").slice(0, 300),
+      meals
+    });
+  } catch (e) {
+    console.error("adapt-meals error:", e.message);
+    return res.status(e.status || 502).json({ error: e.status === 503 ? e.message : "Não foi possível montar o cardápio agora. Tente novamente em instantes." });
+  }
+});
+
 app.get("/api/health", (_req, res) => res.json({ ok: true, aiConfigured: Boolean(process.env.OPENAI_API_KEY) }));
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 app.listen(PORT, () => console.log(`SHAPEN rodando em http://localhost:${PORT}`));
