@@ -213,6 +213,7 @@
  <h1 class="headline">Escolha seu próximo nível.</h1>
  <p class="sub">Comece com o essencial ou tenha mais ferramentas para manter sua evolução. Você pode mudar de plano quando quiser.</p>
  <div class="plans-note"><span class="plans-note-icon">✦</span><div><strong>Pix ou cartão de crédito</strong><p>Escolha Pix para pagar um mês por vez, ou cartão de crédito para configurar a cobrança recorrente mensal. O checkout é processado com segurança pelo Mercado Pago.</p></div></div><div class="card" style="margin-bottom:16px"><label class="label" for="checkoutEmail">Seu e-mail</label><input class="field" id="checkoutEmail" type="email" autocomplete="email" placeholder="voce@email.com" maxlength="160"><label class="label" for="checkoutMethod" style="display:block;margin-top:12px">Forma de pagamento</label><select class="field" id="checkoutMethod"><option value="card">Cartão de crédito · cobrança mensal recorrente</option><option value="pix">Pix · pagamento de um mês por vez</option></select><p class="muted small">No Pix, será necessário realizar um novo pagamento a cada mês. No cartão, a recorrência depende da aprovação e disponibilidade do Mercado Pago.</p><div id="checkoutStatus" class="muted small" aria-live="polite"></div></div>
+ <div class="card" id="subscriptionManagement" style="margin-bottom:16px" aria-live="polite"><b>Minha assinatura</b><p class="muted small">Carregando o status da assinatura…</p></div>
  <div class="plans-grid">
   <article class="plan-card">
    <div class="plan-top"><span class="plan-label">PARA COMEÇAR</span><span class="plan-symbol">◉</span></div>
@@ -532,7 +533,8 @@ async function refreshShapenAccess(){
   if(!r.ok)throw new Error(data.error||'Não foi possível validar sua conta.');
   if(data.profile?.fitness_profile?.profile){localStorage.setItem('shapen_profile',JSON.stringify(data.profile.fitness_profile.profile));if(data.profile.fitness_profile.plan)localStorage.setItem('shapen_plan',JSON.stringify(data.profile.fitness_profile.plan));loadSaved();}
   $('authGate').classList.add('hide');$('appShell').style.display='block';
-  const plan=(data.subscription&&['active','authorized'].includes(data.subscription.status))?data.subscription.plan:'gratis';
+  renderSubscriptionManagement(data);
+  const plan=(data.subscription&&['active','authorized','cancelled'].includes(data.subscription.status))?data.subscription.plan:'gratis';
   const params=new URLSearchParams(window.location.search);
   const paymentReturn=params.get('payment');
   const subscriptionReturn=params.get('subscription');
@@ -579,7 +581,7 @@ async function verifyPaymentStatus(){
  try{
   const r=await fetch('/api/me',{headers:{Authorization:'Bearer '+shapenSession.access_token}});
   const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível consultar sua conta.');
-  const active=data.subscription&&['active','authorized'].includes(String(data.subscription.status).toLowerCase())&&(!data.subscription.current_period_end||new Date(data.subscription.current_period_end).getTime()>Date.now());
+  const active=data.subscription&&['active','authorized','cancelled'].includes(String(data.subscription.status).toLowerCase())&&(!data.subscription.current_period_end||new Date(data.subscription.current_period_end).getTime()>Date.now());
   if(active){msg.textContent='Pagamento confirmado. Seu plano '+String(data.subscription.plan).toUpperCase()+' está ativo.';await refreshShapenAccess();return}
   msg.textContent='Ainda não recebemos a confirmação do pagamento. Aguarde alguns instantes e tente novamente.';
   btn?.classList.remove('hide');
@@ -599,6 +601,36 @@ async function beginCheckout(tier){
   if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
   msg.textContent='Redirecionando para o checkout seguro do Mercado Pago…';window.location.assign(data.checkoutUrl);
  }catch(e){msg.textContent=e.message||'Falha ao preparar o pagamento.'}
+}
+function renderSubscriptionManagement(data){
+ const root=$('subscriptionManagement');if(!root)return;
+ const sub=data?.latestSubscription||data?.subscription;
+ if(!sub){root.innerHTML='<b>Minha assinatura</b><p class="muted small">Você ainda não tem uma assinatura registrada. O plano grátis não gera cobranças.</p>';return;}
+ const names={basico:'Básico',premium:'Premium',ultimate:'Ultimate'};
+ const status=String(sub.status||'pending').toLowerCase();
+ const end=sub.current_period_end?new Date(sub.current_period_end):null;
+ const endText=end&&!Number.isNaN(end.getTime())?end.toLocaleDateString('pt-BR'):'';
+ let detail='';
+ if(sub.payment_method==='pix') detail='Pix é um pagamento único. Não há renovação automática; será necessário pagar novamente para continuar após o período contratado.';
+ else if(status==='cancelled') detail=endText&&end.getTime()>Date.now()?'Cancelamento confirmado. Não haverá novas cobranças. Seu acesso permanece até '+endText+'.':'Cancelamento confirmado. A renovação automática está encerrada.';
+ else if(['active','authorized'].includes(status)) detail='Assinatura recorrente no cartão. A renovação é automática enquanto estiver ativa. Você pode cancelar quando quiser.';
+ else if(status==='pending') detail='Pagamento/assinatura pendente de confirmação. Recursos pagos só são liberados após confirmação do provedor.';
+ else detail='Status atual: '+status+'. Se você acredita que houve erro, entre em contato com o suporte antes de tentar pagar novamente.';
+ root.innerHTML='<div class="row" style="align-items:flex-start;gap:12px;flex-wrap:wrap"><div style="flex:1;min-width:180px"><b>Minha assinatura</b><p style="margin:6px 0"><strong>SHAPEN '+escapeHtml(names[sub.plan]||sub.plan||'')+'</strong> · '+escapeHtml(status.toUpperCase())+'</p><p class="muted small">'+escapeHtml(detail)+'</p></div>'+
+ ((sub.payment_method==='card'&&['active','authorized','pending'].includes(status))?'<button class="btn secondary" id="cancelSubscriptionBtn" type="button" onclick="cancelShapenSubscription()">Cancelar renovação</button>':'')+
+ '</div><p id="subscriptionActionMessage" class="muted small" aria-live="polite"></p>';
+}
+async function cancelShapenSubscription(){
+ const btn=$('cancelSubscriptionBtn'),msg=$('subscriptionActionMessage');
+ if(!window.confirm('Deseja cancelar a assinatura do SHAPEN? O Mercado Pago será solicitado a interromper as próximas cobranças.'))return;
+ if(btn){btn.disabled=true;btn.textContent='Cancelando…';}
+ if(msg)msg.textContent='Confirmando o cancelamento com o Mercado Pago…';
+ try{
+  const r=await fetch('/api/subscription/cancel',{method:'POST',headers:{Authorization:'Bearer '+shapenSession.access_token,'Content-Type':'application/json'},body:JSON.stringify({})});
+  const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível cancelar.');
+  if(msg)msg.textContent=data.message+(data.currentPeriodEnd?' Data final informada: '+new Date(data.currentPeriodEnd).toLocaleDateString('pt-BR')+'.':'');
+  await refreshShapenAccess();
+ }catch(e){if(msg)msg.textContent=e.message||'Não foi possível concluir o cancelamento. Tente novamente.';if(btn){btn.disabled=false;btn.textContent='Tentar cancelar novamente';}}
 }
 function applyPlanVisibility(plan){
  const levels={gratis:0,basico:1,premium:2,ultimate:3};const level=levels[plan]||0;
