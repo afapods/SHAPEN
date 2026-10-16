@@ -175,18 +175,49 @@ const SUBSCRIPTION_PLANS = { basico: { title: "SHAPEN Básico", amount: 24.90 },
 app.post("/api/checkout", async (req, res) => {
   const tier = String(req.body?.plan || "");
   const email = String(req.body?.email || "").trim().slice(0, 160);
+  const paymentMethod = String(req.body?.paymentMethod || "card");
   const chosen = SUBSCRIPTION_PLANS[tier];
   if (!chosen) return res.status(400).json({ error: "Plano inválido." });
+  if (!["card", "pix"].includes(paymentMethod)) return res.status(400).json({ error: "Forma de pagamento inválida." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Informe um e-mail válido." });
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!token) return res.status(503).json({ error: "Checkout ainda não ativado: falta configurar MERCADOPAGO_ACCESS_TOKEN nas variáveis do servidor." });
   try {
     const baseUrl = String(process.env.APP_URL || "https://shapen.onrender.com").replace(/\/$/, "");
-    const response = await fetch("https://api.mercadopago.com/preapproval", { method: "POST", headers: { "Authorization": "Bearer " + token, "Content-Type": "application/json" }, body: JSON.stringify({ reason: chosen.title + " — assinatura mensal", external_reference: "shapen-" + tier + "-" + Date.now(), payer_email: email, auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: chosen.amount, currency_id: "BRL" }, back_url: baseUrl + "/?subscription=return", status: "pending" }) });
+    const headers = { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
+    let response;
+    if (paymentMethod === "pix") {
+      // Pix checkout is a one-time payment. The customer must pay again each month.
+      response = await fetch("https://api.mercadopago.com/checkout/preferences", {
+        method: "POST", headers,
+        body: JSON.stringify({
+          items: [{ id: "shapen-" + tier, title: chosen.title + " — acesso por 1 mês", quantity: 1, unit_price: chosen.amount, currency_id: "BRL" }],
+          payer: { email },
+          external_reference: "shapen-pix-" + tier + "-" + Date.now(),
+          back_urls: { success: baseUrl + "/?payment=success", failure: baseUrl + "/?payment=failure", pending: baseUrl + "/?payment=pending" },
+          auto_return: "approved",
+          payment_methods: { excluded_payment_types: [{ id: "credit_card" }, { id: "debit_card" }, { id: "ticket" }, { id: "account_money" }, { id: "prepaid_card" }] }
+        })
+      });
+    } else {
+      // Card checkout creates the recurring monthly subscription.
+      response = await fetch("https://api.mercadopago.com/preapproval", {
+        method: "POST", headers,
+        body: JSON.stringify({
+          reason: chosen.title + " — assinatura mensal",
+          external_reference: "shapen-card-" + tier + "-" + Date.now(),
+          payer_email: email,
+          auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: chosen.amount, currency_id: "BRL" },
+          back_url: baseUrl + "/?subscription=return",
+          status: "pending"
+        })
+      });
+    }
     const data = await response.json();
     if (!response.ok) { console.error("Mercado Pago checkout error:", response.status, JSON.stringify(data).slice(0, 1000)); return res.status(502).json({ error: "O Mercado Pago não conseguiu criar o checkout. Confira as credenciais e a configuração da conta." }); }
-    if (!data.init_point) return res.status(502).json({ error: "O Mercado Pago não retornou o link seguro de pagamento." });
-    return res.json({ checkoutUrl: data.init_point, subscriptionId: data.id, plan: tier, amount: chosen.amount });
+    const checkoutUrl = paymentMethod === "pix" ? (data.init_point || data.sandbox_init_point) : data.init_point;
+    if (!checkoutUrl) return res.status(502).json({ error: "O Mercado Pago não retornou o link seguro de pagamento." });
+    return res.json({ checkoutUrl, paymentId: data.id, plan: tier, amount: chosen.amount, paymentMethod, recurring: paymentMethod === "card" });
   } catch (e) { console.error("checkout error:", e.message); return res.status(502).json({ error: "Não foi possível conectar ao Mercado Pago agora." }); }
 });
 app.post("/api/food-photo", async (req, res) => {
