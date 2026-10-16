@@ -114,6 +114,7 @@
  <div class="brand"><div class="mark">s</div><div><div class="brandname">SHAPEN</div><div class="tag">fitness inteligente, feito para você</div></div></div>
  <div class="status" id="topStatus">● MODO DEMONSTRAÇÃO</div>
 </header>
+<div id="freePlanNotice" class="card span12" style="margin-top:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap"><div><b>Você está no SHAPEN Grátis</b><div class="muted small">Explore a interface e conheça o aplicativo antes de assinar. Quando quiser mais recursos, veja os planos pagos.</div></div><button class="btn" onclick="showSubscriptionPlans()">Conhecer planos</button></div>
 <div class="layout">
 <aside class="side">
  <button class="nav active" data-page="home"><span class="ico">◫</span>Visão geral</button>
@@ -519,15 +520,13 @@ async function refreshShapenAccess(){
   const r=await fetch('/api/me',{headers:{Authorization:'Bearer '+shapenSession.access_token}});const data=await r.json();
   if(!r.ok)throw new Error(data.error||'Não foi possível validar sua conta.');
   if(data.profile?.fitness_profile?.profile){localStorage.setItem('shapen_profile',JSON.stringify(data.profile.fitness_profile.profile));if(data.profile.fitness_profile.plan)localStorage.setItem('shapen_plan',JSON.stringify(data.profile.fitness_profile.plan));loadSaved();}
-  if(data.subscription&&['active','authorized'].includes(data.subscription.status)){
-   $('authGate').classList.add('hide');$('appShell').style.display='block';
-   const plan=data.subscription.plan;
-   $('topStatus').textContent='● PLANO '+plan.toUpperCase();
-   window.shapenPlan=plan;applyPlanVisibility(plan);
-   return;
-  }
-  $('authGate').classList.remove('hide');$('authForms').classList.add('hide');$('subscriptionGate').classList.remove('hide');
-  $('checkoutMessage').textContent='Conta conectada: '+(data.user?.email||'').replace(/[<>]/g,'')+'. Escolha um plano para continuar.';
+  $('authGate').classList.add('hide');$('appShell').style.display='block';
+  const plan=(data.subscription&&['active','authorized'].includes(data.subscription.status))?data.subscription.plan:'gratis';
+  $('topStatus').textContent=plan==='gratis'?'● PLANO GRÁTIS':'● PLANO '+plan.toUpperCase();
+  window.shapenPlan=plan;applyPlanVisibility(plan);
+  const freeNotice=$('freePlanNotice');
+  if(freeNotice)freeNotice.classList.toggle('hide',plan!=='gratis');
+  return;
  }catch(e){
   $('authForms').classList.add('hide');$('subscriptionGate').classList.add('hide');$('authSetupMissing').classList.remove('hide');
   $('authSetupMissing').innerHTML='<b>Não foi possível validar o acesso</b><p>'+escapeHtml(e.message||'Confira a configuração do Supabase e se o arquivo supabase/schema.sql foi executado.')+'</p>';
@@ -541,8 +540,8 @@ $('authForm').addEventListener('submit',async e=>{
  try{
   if(shapenAuthMode==='signup'){
    const {data,error}=await shapenSupabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/'}});if(error)throw error;
-   if(!data.session){$('authMessage').textContent='Conta criada. Confira seu e-mail para confirmar o cadastro e depois entre.';setAuthMode('login');}
-   else{$('authMessage').textContent='Conta criada com sucesso.';shapenSession=data.session;await refreshShapenAccess();}
+   if(!data.session){setAuthMode('login');$('authMessage').textContent='Quase lá! Enviamos um link de confirmação para '+email+'. Abra o e-mail, clique em “Confirmar e-mail” e depois volte aqui para entrar. Se não encontrar, confira Spam e Promoções.';}
+   else{$('authMessage').textContent='Conta criada com sucesso! Você já pode explorar o SHAPEN no plano grátis.';shapenSession=data.session;await refreshShapenAccess();}
   }else{
    const {data,error}=await shapenSupabase.auth.signInWithPassword({email,password});if(error)throw error;
    shapenSession=data.session;await refreshShapenAccess();
@@ -551,6 +550,11 @@ $('authForm').addEventListener('submit',async e=>{
  finally{$('authSubmit').disabled=false;$('authSubmit').textContent=shapenAuthMode==='login'?'Entrar na minha conta':'Criar minha conta';}
 });
 async function authSignOut(){if(shapenSupabase)await shapenSupabase.auth.signOut();shapenSession=null;$('appShell').style.display='none';$('authGate').classList.remove('hide');setAuthMode('login');}
+function showSubscriptionPlans(){
+ $('appShell').style.display='none';$('authGate').classList.remove('hide');
+ $('authForms').classList.add('hide');$('authSetupMissing').classList.add('hide');$('subscriptionGate').classList.remove('hide');
+ $('checkoutMessage').textContent='Escolha seu plano para desbloquear mais recursos.';
+}
 async function beginCheckout(tier){
  const msg=$('checkoutMessage');if(!shapenSession){msg.textContent='Entre na sua conta para continuar.';return}
  const paymentMethod=$('authPaymentMethod').value;msg.textContent='Preparando checkout seguro...';
@@ -558,7 +562,7 @@ async function beginCheckout(tier){
   const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+shapenSession.access_token},body:JSON.stringify({plan:tier,paymentMethod,email:shapenSession.user.email})});
   const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível iniciar o pagamento.');
   if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
-  msg.innerHTML='Checkout preparado. <a href="'+escapeHtml(data.checkoutUrl)+'" target="_blank" rel="noopener noreferrer">Abrir pagamento seguro</a>. Depois do pagamento, aguarde a confirmação para liberar o plano.';
+  msg.textContent='Redirecionando para o checkout seguro do Mercado Pago…';window.location.assign(data.checkoutUrl);
  }catch(e){msg.textContent=e.message||'Falha ao preparar o pagamento.'}
 }
 function applyPlanVisibility(plan){
