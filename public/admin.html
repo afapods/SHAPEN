@@ -12,7 +12,7 @@
 </head>
 <body>
 <div class="wrap">
-<header class="top"><div><div class="brand">SHAPEN<span>.</span></div><div class="label">Painel de administração</div></div><div class="tools"><button id="refresh" class="btn hidden">Atualizar dados</button><button id="logout" class="btn hidden">Sair</button></div></header>
+<header class="top"><div><div class="brand">SHAPEN<span>.</span></div><div class="label">Painel de administração</div></div><div class="tools"><button id="notify" class="btn hidden">Ativar notificações</button><button id="refresh" class="btn hidden">Atualizar dados</button><button id="logout" class="btn hidden">Sair</button></div></header>
 <section id="login" class="login">
 <div class="label">Acesso restrito</div><h1>Entre no painel</h1><p class="muted">Use sua conta administrativa do SHAPEN.</p>
 <form id="loginForm"><div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn primary" style="width:100%" id="loginBtn">Entrar com segurança</button><div id="loginError" class="error"></div></form>
@@ -36,7 +36,7 @@
 </div>
 <script>
 const $ = id => document.getElementById(id);
-let cfg = null, accessToken = sessionStorage.getItem("shapen_admin_token") || "";
+let cfg = null, accessToken = sessionStorage.getItem("shapen_admin_token") || "", notificationBaseline = false, seenStatuses = {};
 const money = n => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(n||0));
 const date = value => value ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"short"}).format(new Date(value)) : "—";
 const escapeHtml = value => String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -44,14 +44,32 @@ async function getConfig(){const r=await fetch("/api/config");cfg=await r.json()
 async function signIn(email,password){const r=await fetch(cfg.supabaseUrl+"/auth/v1/token?grant_type=password",{method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.supabasePublishableKey},body:JSON.stringify({email,password})});const data=await r.json();if(!r.ok)throw new Error(data.msg||data.message||data.error_description||"Não foi possível entrar.");accessToken=data.access_token;sessionStorage.setItem("shapen_admin_token",accessToken);}
 async function load(){const r=await fetch("/api/admin/overview",{headers:{Authorization:"Bearer "+accessToken}});const data=await r.json();if(r.status===401){sessionStorage.removeItem("shapen_admin_token");accessToken="";showLogin();throw new Error(data.error||"Entre novamente.");}if(!r.ok)throw new Error(data.error||"Falha ao carregar o painel.");render(data);showDashboard();}
 function showLogin(){ $("login").classList.remove("hidden");$("dashboard").classList.add("hidden");$("logout").classList.add("hidden");$("refresh").classList.add("hidden");}
-function showDashboard(){ $("login").classList.add("hidden");$("dashboard").classList.remove("hidden");$("logout").classList.remove("hidden");$("refresh").classList.remove("hidden");}
-function render(data){const m=data.metrics||{};$("revenue").textContent=money(m.estimatedMonthlyRevenue);$("active").textContent=m.activeSubscribers??0;$("pending").textContent=m.pendingPayments??0;$("cancelled").textContent=m.cancelledSubscriptions??0;
+function showDashboard(){ $("login").classList.add("hidden");$("dashboard").classList.remove("hidden");$("logout").classList.remove("hidden");$("refresh").classList.remove("hidden");$("notify").classList.remove("hidden");}
+function notifyPaidSubscriptions(data){
+const list=data.subscriptions||[];
+if(!notificationBaseline){list.forEach(s=>{seenStatuses[s.id]=s.status;});notificationBaseline=true;return;}
+for(const s of list){
+const prev=seenStatuses[s.id];
+const isPaid=["active","authorized"].includes(String(s.status||"").toLowerCase());
+const wasPaid=["active","authorized"].includes(String(prev||"").toLowerCase());
+if(isPaid&&!wasPaid){
+const title="Nova assinatura SHAPEN";
+const body=(s.customer||"Novo cliente")+" — "+String(s.plan||"").toUpperCase()+" confirmado.";
+if("Notification" in window && Notification.permission==="granted"){try{new Notification(title,{body});}catch{}}
+const toast=document.createElement("div");toast.className="notice";toast.textContent=title+": "+body;
+$("dashboard").prepend(toast);setTimeout(()=>toast.remove(),12000);
+}
+seenStatuses[s.id]=s.status;
+}
+}
+function render(data){notifyPaidSubscriptions(data);const m=data.metrics||{};$("revenue").textContent=money(m.estimatedMonthlyRevenue);$("active").textContent=m.activeSubscribers??0;$("pending").textContent=m.pendingPayments??0;$("cancelled").textContent=m.cancelledSubscriptions??0;
 const rows=data.subscriptions||[];$("rows").innerHTML=rows.map(s=>'<tr><td>'+escapeHtml(s.customer)+'<div class="muted small">'+escapeHtml(s.email||"E-mail indisponível")+'…</div></td><td>'+escapeHtml((s.plan||"—").toUpperCase())+'</td><td><span class="status '+escapeHtml(s.status)+'">'+escapeHtml(s.status)+'</span></td><td>'+escapeHtml(s.paymentMethod||"—")+'</td><td>'+escapeHtml(date(s.createdAt))+'</td></tr>').join("");$("tableEmpty").classList.toggle("hidden",rows.length>0);
 const plans=data.plans||[];const max=Math.max(1,...plans.map(p=>Number(p.active||0)));$("plans").innerHTML=plans.map(p=>'<div class="plan"><div><strong>'+escapeHtml(p.plan)+'</strong><small>'+Number(p.active||0)+' assinante(s)</small><div class="bar"><i style="width:'+Math.min(100,Number(p.active||0)/max*100)+'%"></i></div></div><b>'+money(p.estimatedMonthlyRevenue)+'/mês</b></div>').join("");
 $("updated").textContent="Atualizado em "+new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short"}).format(new Date());}
 $("loginForm").addEventListener("submit",async e=>{e.preventDefault();$("loginError").textContent="";$("loginBtn").disabled=true;$("loginBtn").textContent="Verificando…";try{if(!cfg)await getConfig();await signIn($("email").value.trim(),$("password").value);await load();}catch(err){$("loginError").textContent=err.message||"Erro ao entrar.";}finally{$("loginBtn").disabled=false;$("loginBtn").textContent="Entrar com segurança";}});
-$("refresh").addEventListener("click",async()=>{ $("refresh").disabled=true;try{await load();}catch(e){alert(e.message);}finally{$("refresh").disabled=false;}});
-$("logout").addEventListener("click",()=>{sessionStorage.removeItem("shapen_admin_token");accessToken="";showLogin();});
+$("refresh").addEventListener("click",async()=>{ $("refresh").disabled=true;try{await load();}catch(e){alert(e.message);}finally{$("refresh").disabled=false;}});\nsetInterval(()=>{if(accessToken&&!document.hidden)load().catch(()=>{});},60000);
+$("notify").addEventListener("click",async()=>{if(!("Notification" in window)){alert("Este navegador não suporta notificações.");return;}const p=await Notification.requestPermission();$("notify").textContent=p==="granted"?"Notificações ativadas": "Ativar notificações";if(p==="granted")alert("Notificações do navegador ativadas. Deixe o painel aberto para receber avisos.");});
+$("logout").addEventListener("click",()=>{sessionStorage.removeItem("shapen_admin_token");accessToken="";notificationBaseline=false;seenStatuses={};showLogin();});
 (async()=>{try{await getConfig();if(accessToken)await load();}catch(e){if(accessToken){sessionStorage.removeItem("shapen_admin_token");accessToken="";} $("loginError").textContent=e.message;showLogin();}})();
 </script>
 </body></html>
