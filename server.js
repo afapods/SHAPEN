@@ -67,8 +67,11 @@ async function supabaseAdminRequest(cfg, route, options = {}) {
   let data = null;
   try { data = body ? JSON.parse(body) : null; } catch { data = body; }
   if (!response.ok) {
-    const error = new Error("Falha ao consultar dados do SHAPEN.");
+    const details = data && typeof data === "object" ? data : {};
+    const error = new Error(String(details.message || details.error || "Falha ao consultar dados do SHAPEN."));
     error.status = response.status;
+    error.code = details.code || null;
+    error.details = details.details || null;
     console.error("Supabase database request failed:", response.status, String(body).slice(0, 500));
     throw error;
   }
@@ -267,10 +270,18 @@ app.get("/api/config", (_req, res) => {
 });
 app.get("/api/me", authenticateSupabaseRequest, async (req, res) => {
   try {
-    const [profiles, subscriptions] = await Promise.all([
-      supabaseAdminRequest(req.shapenSupabase, "shapen_profiles?select=display_name,fitness_profile&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&limit=1"),
-      supabaseAdminRequest(req.shapenSupabase, "shapen_subscriptions?select=plan,status,payment_method,current_period_end,created_at,cancelled_at,external_reference&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&order=created_at.desc&limit=10")
-    ]);
+    const profiles = await supabaseAdminRequest(req.shapenSupabase, "shapen_profiles?select=display_name,fitness_profile&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&limit=1");
+    let subscriptions;
+    try {
+      subscriptions = await supabaseAdminRequest(req.shapenSupabase, "shapen_subscriptions?select=plan,status,payment_method,current_period_end,created_at,cancelled_at,external_reference&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&order=created_at.desc&limit=10");
+    } catch (error) {
+      // Allow account access if an older database is missing only the newer optional metadata columns.
+      const message = String(error.message || "").toLowerCase();
+      const missingNewColumn = ["cancelled_at", "external_reference"].some((column) => message.includes(column));
+      if (!missingNewColumn) throw error;
+      console.warn("SHAPEN database migration pending; retrying account lookup without optional columns.");
+      subscriptions = await supabaseAdminRequest(req.shapenSupabase, "shapen_subscriptions?select=plan,status,payment_method,current_period_end,created_at&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&order=created_at.desc&limit=10");
+    }
     const now = Date.now();
     const active = (subscriptions || []).find(x => {
       const status = String(x.status || "").toLowerCase();
@@ -507,6 +518,14 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
     return res.status(500).json({ error: "Não foi possível processar a notificação." });
   }
 });
-app.get("/api/health", (_req, res) => res.json({ ok: true, aiConfigured: Boolean(process.env.OPENAI_API_KEY) }));
+app.get("/api/health", (_req, res) => {
+  const cfg = supabaseConfig();
+  return res.json({
+    ok: true,
+    aiConfigured: Boolean(process.env.OPENAI_API_KEY),
+    authConfigured: Boolean(cfg.url && cfg.publishableKey && cfg.secretKey),
+    mercadopagoConfigured: Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN)
+  });
+});
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 app.listen(PORT, () => console.log(`SHAPEN rodando em http://localhost:${PORT}`));
