@@ -70,6 +70,7 @@
  <button class="nav" data-page="setup"><span class="ico">◎</span>Meu plano</button>
  <button class="nav" data-page="workout"><span class="ico">↗</span>Treino</button>
  <button class="nav" data-page="nutrition"><span class="ico">◉</span>Nutrição</button>
+ <button class="nav" data-page="progress"><span class="ico">↗</span>Evolução</button>
  <button class="nav" data-page="coach"><span class="ico">✳</span>Copiloto</button>
  <button class="nav" data-page="plans"><span class="ico">♢</span>Assinaturas</button>
  <div class="side-note"><b>Seu plano muda com você.</b>Pequenas decisões consistentes. Progresso que dá para acompanhar.</div>
@@ -155,11 +156,11 @@
  <div class="eyebrow">Nutrição flexível</div><h1 class="headline">Opções, não culpa.</h1><p class="sub">Sugestões gerais de refeições e estimativas educativas. Troque ingredientes e escolha o que combina com sua rotina.</p>
  <div id="nutritionContent"><div class="card empty"><div class="emoji">◉</div><h2>Personalize suas sugestões</h2><button class="btn" onclick="showPage('setup')">Configurar perfil</button></div></div>
 </section>
-<section class="page" id="page-plans">
+<section class="page" id="page-progress"><div class="eyebrow">SHAPEN REAL LIFE</div><h1 class="headline">Sua evolução, de verdade.</h1><p class="sub">Registre treinos, medidas e perceba tendências sem buscar perfeição.</p><div class="grid"><div class="card span6"><h2>Registrar medidas</h2><p class="muted small">Dados salvos apenas neste navegador.</p><div class="formgrid"><div class="formrow"><label class="label" for="progressWeight">Peso (kg)</label><input class="field" id="progressWeight" type="number" min="25" max="350" step="0.1"></div><div class="formrow"><label class="label" for="progressWaist">Cintura (cm)</label><input class="field" id="progressWaist" type="number" min="30" max="250" step="0.1"></div><div class="formrow"><label class="label" for="progressHip">Quadril (cm)</label><input class="field" id="progressHip" type="number" min="30" max="250" step="0.1"></div><div class="formrow"><label class="label" for="progressNote">Nota</label><input class="field" id="progressNote" maxlength="180" placeholder="Energia, sono, dificuldades..."></div></div><label class="label" for="progressPhoto">Foto opcional</label><input class="field" id="progressPhoto" type="file" accept="image/*"><div class="actions"><button class="btn" onclick="saveProgress()">Salvar registro</button></div><p class="muted small">Fotos e medidas são sensíveis; registre somente o que desejar.</p></div><div class="card span6"><h2>Revisão semanal</h2><div id="weeklyReview" class="stack"><p class="muted">Registre treinos para gerar sua revisão.</p></div><div class="actions"><button class="btn secondary" onclick="buildWeeklyReview()">Atualizar</button><button class="btn ghost" onclick="speakWeeklyReview()">Ouvir resumo</button></div></div><div class="card span12"><div class="row"><div><h2>Linha do tempo</h2><p class="muted small">Treinos e medidas registrados.</p></div><button class="btn ghost" onclick="exportProgress()">Exportar dados</button></div><div id="progressTimeline" class="stack"><p class="muted">Seus registros aparecerão aqui.</p></div></div></div></section><section class="page" id="page-plans">
  <div class="eyebrow">SHAPEN MEMBERSHIP</div>
  <h1 class="headline">Escolha seu próximo nível.</h1>
  <p class="sub">Comece com o essencial ou tenha mais ferramentas para manter sua evolução. Você pode mudar de plano quando quiser.</p>
- <div class="plans-note"><span class="plans-note-icon">✦</span><div><strong>Planos mensais</strong><p>Preços em reais. A assinatura e a cobrança online ainda serão ativadas quando o checkout for conectado.</p></div></div>
+ <div class="plans-note"><span class="plans-note-icon">✦</span><div><strong>Assinaturas mensais seguras</strong><p>O checkout será processado pelo Mercado Pago. Os meios disponíveis aparecem na tela segura do provedor.</p></div></div><div class="card" style="margin-bottom:16px"><label class="label" for="checkoutEmail">E-mail para a assinatura</label><input class="field" id="checkoutEmail" type="email" autocomplete="email" placeholder="voce@email.com" maxlength="160"><div id="checkoutStatus" class="muted small" aria-live="polite"></div></div>
  <div class="plans-grid">
   <article class="plan-card">
    <div class="plan-top"><span class="plan-label">PARA COMEÇAR</span><span class="plan-symbol">◉</span></div>
@@ -190,7 +191,7 @@
     <li><span>✓</span>Adaptações de cardápio por IA</li>
     <li><span>✓</span>Copiloto para dúvidas e ajustes de rotina</li>
     <li><span>✓</span>Mais opções de substituição de refeições</li>
-    <li><span>✓</span>Reorganização do plano quando a rotina mudar</li>
+    <li><span>✓</span>Reorganização do plano quando a rotina mudar</li><li><span>✓</span>Treino-resgate para dias corridos ou sessões perdidas</li><li><span>✓</span>Histórico e revisão semanal da consistência</li>
     <li><span>✓</span>Acesso prioritário a novos recursos SHAPEN</li>
    </ul>
   </article>
@@ -207,7 +208,7 @@
     <li><span>✓</span>Adaptações de treino e refeições mais completas</li>
     <li><span>✓</span>Planejamento semanal integrado de treino e alimentação</li>
     <li><span>✓</span>Relatórios de evolução e consistência</li>
-    <li><span>✓</span>Mais personalização de acordo com sua rotina</li>
+    <li><span>✓</span>Mais personalização de acordo com sua rotina</li><li><span>✓</span>Diário alimentar por foto com estimativa editável</li><li><span>✓</span>Linha do tempo de medidas e fotos</li><li><span>✓</span>Copiloto por voz neste navegador</li>
     <li><span>✓</span>Acesso antecipado a recursos avançados</li>
    </ul>
   </article>
