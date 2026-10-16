@@ -401,14 +401,10 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
     if (active) {
       return res.status(409).json({ error: "Você já tem um plano SHAPEN ativo. Para evitar cobranças duplicadas, aguarde o fim do período atual ou gerencie sua assinatura." });
     }
-    const recentPending = (existing || []).find(x => {
-      if (String(x.status || "").toLowerCase() !== "pending") return false;
-      const created = new Date(x.created_at || 0).getTime();
-      return Number.isFinite(created) && created > now - 30 * 60 * 1000;
-    });
-    if (recentPending) {
-      return res.status(409).json({ error: "Você já iniciou um checkout recentemente. Se ainda estiver aberto, conclua-o; se desistiu, aguarde 30 minutos para iniciar outra tentativa. Nenhuma cobrança é confirmada sem aprovação do Mercado Pago." });
-    }
+    // A pending row is not proof that the customer opened the provider checkout.
+    // Allow retries when there is no active subscription; access is still granted
+    // only after a verified Mercado Pago notification confirms the payment.
+
   } catch (error) {
     console.error("Could not check existing checkouts:", error.message);
     return res.status(502).json({ error: "Não foi possível verificar suas tentativas de pagamento. Nenhum novo checkout foi criado; tente novamente." });
