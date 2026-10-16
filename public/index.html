@@ -475,6 +475,16 @@ updateWizard();loadSaved();
 
 <script>
 let shapenSupabase=null, shapenAuthMode='login', shapenSession=null;
+const shapenNativeFetch=window.fetch.bind(window);
+window.fetch=(input,init={})=>{
+ const url=typeof input==='string'?input:(input&&input.url)||'';
+ if(url.startsWith('/api/')&&shapenSession?.access_token){
+  const headers=new Headers(init.headers||(input instanceof Request?input.headers:undefined));
+  if(!headers.has('Authorization'))headers.set('Authorization','Bearer '+shapenSession.access_token);
+  init={...init,headers};
+ }
+ return shapenNativeFetch(input,init);
+};
 function setAuthMode(mode){
  shapenAuthMode=mode;
  $('loginTab').classList.toggle('active',mode==='login');$('signupTab').classList.toggle('active',mode==='signup');
