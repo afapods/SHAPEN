@@ -23,8 +23,39 @@
 .nutrition-section-title{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:22px 0 8px}
 .nutrition-section-title h2{margin:0;font-size:21px}
 @media(max-width:620px){.meal-grid{grid-template-columns:1fr}.meal-photo{height:200px}}
-@media(max-width:800px){.shell{padding:15px}.layout{grid-template-columns:1fr;gap:16px}.side{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}.nav{justify-content:center;flex-direction:column;gap:4px;padding:9px 4px;font-size:10px}.side-note{display:none}.span8,.span7,.span6,.span5,.span4{grid-column:span 12}.headline{font-size:32px}.status{display:none}.card{padding:16px}.bigcta{align-items:flex-start;flex-direction:column}}
+@media(max-width:800px){.shell{padding:15px}.layout{grid-template-columns:1fr;gap:16px}.side{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px}.nav{justify-content:center;flex-direction:column;gap:4px;padding:9px 4px;font-size:10px}.side-note{display:none}.span8,.span7,.span6,.span5,.span4{grid-column:span 12}.headline{font-size:32px}.status{display:none}.card{padding:16px}.bigcta{align-items:flex-start;flex-direction:column}}
 @media(max-width:480px){.formgrid,.choicegrid{grid-template-columns:1fr}.exercise{grid-template-columns:1fr}.altselect{max-width:none;width:100%}.brandname{font-size:18px}}
+
+.plans-note{display:flex;gap:13px;align-items:flex-start;background:#302044;border:1px solid var(--line);border-radius:15px;padding:15px;margin:0 0 18px}
+.plans-note-icon{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:11px;background:#4b3265;color:var(--lime);font-size:19px}
+.plans-note strong{display:block;font-size:14px}
+.plans-note p{margin:3px 0 0;color:var(--muted);font-size:12px}
+.plans-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.plan-card{position:relative;padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(155deg,#39274d,#2b1d39);min-width:0}
+.plan-card-premium{border-color:#b69cff;box-shadow:0 0 0 1px #b69cff22}
+.plan-popular{position:absolute;top:-11px;right:18px;background:var(--lime);color:#241633;border-radius:999px;padding:5px 10px;font-size:10px;font-weight:900;letter-spacing:.7px}
+.plan-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}
+.plan-label{font-size:10px;font-weight:850;letter-spacing:1.6px;color:var(--muted)}
+.plan-symbol{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:#4a3265;color:var(--lime);font-size:20px}
+.plan-card h2{font-size:26px;margin:0 0 6px}
+.plan-description{min-height:42px;margin:0;color:var(--muted);font-size:13px}
+.plan-price{display:flex;align-items:baseline;gap:7px;margin-top:22px}
+.plan-price strong{font-size:34px;letter-spacing:-1.5px}
+.plan-price span{font-size:13px;color:var(--muted)}
+.plan-billing{font-size:11px;color:var(--muted);margin:0 0 17px}
+.plan-button{width:100%;margin-bottom:5px}
+.plan-divider{height:1px;background:var(--line);margin:18px 0}
+.plan-includes{font-size:12px;font-weight:850;margin:0 0 12px}
+.plan-features{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px}
+.plan-features li{display:flex;gap:10px;font-size:13px;line-height:1.4}
+.plan-features li>span{color:var(--lime);font-weight:900;flex-shrink:0}
+.plan-features .feature-muted{color:#a99ab8}
+.plan-features .feature-muted>span{color:#a99ab8}
+.plan-selection{margin-top:16px}
+.plan-selection h3{margin:0 0 5px}
+.plan-selection p{margin:0}
+.plan-disclaimer{font-size:11px;line-height:1.5;color:var(--muted);margin:14px 2px}
+@media(max-width:700px){.plans-grid{grid-template-columns:1fr}.plan-description{min-height:0}.plan-card{padding:21px}}
 </style>
 </head>
 <body>
@@ -40,6 +71,7 @@
  <button class="nav" data-page="workout"><span class="ico">↗</span>Treino</button>
  <button class="nav" data-page="nutrition"><span class="ico">◉</span>Nutrição</button>
  <button class="nav" data-page="coach"><span class="ico">✳</span>Copiloto</button>
+ <button class="nav" data-page="plans"><span class="ico">♢</span>Assinaturas</button>
  <div class="side-note"><b>Seu plano muda com você.</b>Pequenas decisões consistentes. Progresso que dá para acompanhar.</div>
 </aside>
 <main class="main">
@@ -123,6 +155,51 @@
  <div class="eyebrow">Nutrição flexível</div><h1 class="headline">Opções, não culpa.</h1><p class="sub">Sugestões gerais de refeições e estimativas educativas. Troque ingredientes e escolha o que combina com sua rotina.</p>
  <div id="nutritionContent"><div class="card empty"><div class="emoji">◉</div><h2>Personalize suas sugestões</h2><button class="btn" onclick="showPage('setup')">Configurar perfil</button></div></div>
 </section>
+<section class="page" id="page-plans">
+ <div class="eyebrow">SHAPEN MEMBERSHIP</div>
+ <h1 class="headline">Escolha seu próximo nível.</h1>
+ <p class="sub">Comece com o essencial ou tenha mais ferramentas para manter sua evolução. Você pode mudar de plano quando quiser.</p>
+ <div class="plans-note"><span class="plans-note-icon">✦</span><div><strong>Planos mensais</strong><p>Preços em reais. A assinatura e a cobrança online ainda serão ativadas quando o checkout for conectado.</p></div></div>
+ <div class="plans-grid">
+  <article class="plan-card">
+   <div class="plan-top"><span class="plan-label">PARA COMEÇAR</span><span class="plan-symbol">◉</span></div>
+   <h2>Básico</h2><p class="plan-description">Para criar uma rotina e organizar treino e alimentação.</p>
+   <div class="plan-price"><strong>R$ 19,90</strong><span>/ mês</span></div>
+   <p class="plan-billing">Cobrança mensal</p>
+   <button class="btn secondary plan-button" onclick="choosePlan('basico')">Escolher Básico</button>
+   <div class="plan-divider"></div>
+   <p class="plan-includes">O que está incluído</p>
+   <ul class="plan-features">
+    <li><span>✓</span>Plano inicial de treino personalizado</li>
+    <li><span>✓</span>Sugestões de refeições e alternativas</li>
+    <li><span>✓</span>Lista de compras básica</li>
+    <li><span>✓</span>Acompanhamento do progresso no dispositivo</li>
+    <li class="feature-muted"><span>—</span>Adaptações de cardápio por IA em maior volume</li>
+   </ul>
+  </article>
+  <article class="plan-card plan-card-premium">
+   <div class="plan-popular">MAIS COMPLETO</div>
+   <div class="plan-top"><span class="plan-label">PARA EVOLUIR</span><span class="plan-symbol">✦</span></div>
+   <h2>Premium</h2><p class="plan-description">Mais flexibilidade para adaptar sua rotina com ajuda da IA.</p>
+   <div class="plan-price"><strong>R$ 39,90</strong><span>/ mês</span></div>
+   <p class="plan-billing">Cobrança mensal</p>
+   <button class="btn plan-button" onclick="choosePlan('premium')">Escolher Premium</button>
+   <div class="plan-divider"></div>
+   <p class="plan-includes">Tudo do Básico, mais</p>
+   <ul class="plan-features">
+    <li><span>✓</span>Adaptações de cardápio por IA</li>
+    <li><span>✓</span>Copiloto para dúvidas e ajustes de rotina</li>
+    <li><span>✓</span>Mais opções de substituição de refeições</li>
+    <li><span>✓</span>Reorganização do plano quando a rotina mudar</li>
+    <li><span>✓</span>Acesso prioritário a novos recursos SHAPEN</li>
+   </ul>
+  </article>
+ </div>
+ <div class="plan-selection card" id="planSelection" aria-live="polite">
+  <h3>Seu plano escolhido</h3><p id="planSelectionText" class="muted small">Ainda não escolheu um plano.</p>
+ </div>
+ <p class="plan-disclaimer">Importante: estes preços são a proposta inicial do SHAPEN. A escolha nesta tela ainda não inicia cobrança nem ativa limites de acesso; o sistema de pagamentos e controle de assinatura precisa ser integrado antes do lançamento comercial.</p>
+</section>
 <section class="page" id="page-coach">
  <div class="eyebrow">Copiloto com IA</div><h1 class="headline">A rotina mudou?<br>Reorganize.</h1><p class="sub">Quando o servidor estiver configurado, suas perguntas serão respondidas por um modelo de IA. Sem servidor configurado, o app informa que a conexão ainda não está ativa.</p>
  <div class="card"><div class="row"><h2>SHAPEN, seu copiloto</h2><span class="chip" id="aiStatus">IA A CONFIGURAR</span></div><div class="chatbox" id="chatbox"><div class="bubble">Oi! Posso ajudar a adaptar seu plano de forma simples. Experimente: “só tenho 20 minutos”, “não tenho esse equipamento” ou “quero uma alternativa para a refeição”.</div></div><div class="pilltabs"><button class="pilltab" onclick="quickAsk('Só tenho 20 minutos hoje')">Só tenho 20 min</button><button class="pilltab" onclick="quickAsk('Não tenho esse equipamento')">Sem equipamento</button><button class="pilltab" onclick="quickAsk('Quero uma alternativa para uma refeição')">Trocar refeição</button></div><form class="chatform" id="chatForm"><input class="field" id="chatInput" placeholder="Conte o que mudou no seu dia..." maxlength="400"><button class="btn" type="submit">Enviar</button></form><p class="muted small" style="margin-bottom:0">Não use o chat para emergências, diagnóstico ou recomendações clínicas. Evite inserir informações pessoais sensíveis.</p></div>
@@ -131,11 +208,28 @@
 <div class="footer">SHAPEN · Protótipo funcional local · Recomendações educativas, não atendimento médico.</div>
 </div>
 <script>
+function choosePlan(tier){
+ const plans={basico:{name:'Básico',price:'R$ 19,90/mês'},premium:{name:'Premium',price:'R$ 39,90/mês'}};
+ const chosen=plans[tier];
+ if(!chosen)return;
+ localStorage.setItem('shapen_selected_plan',tier);
+ const target=$('planSelectionText');
+ if(target)target.textContent=chosen.name+' — '+chosen.price+'. Seleção registrada neste dispositivo; pagamento ainda não ativado.';
+ document.querySelectorAll('.plan-button').forEach(b=>{b.classList.toggle('secondary',!b.getAttribute('onclick').includes("'"+tier+"'"));});
+ toast('Plano '+chosen.name+' selecionado. A cobrança ainda será ativada.');
+}
+function renderPlanSelection(){
+ const tier=localStorage.getItem('shapen_selected_plan');
+ const plans={basico:{name:'Básico',price:'R$ 19,90/mês'},premium:{name:'Premium',price:'R$ 39,90/mês'}};
+ const target=$('planSelectionText');
+ if(target&&tier&&plans[tier])target.textContent=plans[tier].name+' — '+plans[tier].price+'. Seleção registrada neste dispositivo; pagamento ainda não ativado.';
+}
+
 const $=id=>document.getElementById(id);
 const GOALS={muscle:'Hipertrofia',fat:'Reduzir gordura',fitness:'Condicionamento',recomp:'Recomposição'};
 const STEPS=['Seu objetivo','Seu ponto de partida','Sua rotina de treino','Sua alimentação','Segurança'];
 let currentStep=0, profile=null, plan=null, done=new Set(), todayKey=new Date().toISOString().slice(0,10);
-function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+name));document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===name));if(name==='workout')renderWorkout();if(name==='nutrition')renderNutrition();if(name==='home')renderHome();window.scrollTo({top:0,behavior:'smooth'});}
+function showPage(name){document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id==='page-'+name));document.querySelectorAll('.nav').forEach(n=>n.classList.toggle('active',n.dataset.page===name));if(name==='workout')renderWorkout();if(name==='nutrition')renderNutrition();if(name==='home')renderHome();if(name==='plans')renderPlanSelection();window.scrollTo({top:0,behavior:'smooth'});}
 document.querySelectorAll('.nav').forEach(n=>n.addEventListener('click',()=>showPage(n.dataset.page)));
 function updateWizard(){document.querySelectorAll('.wizard').forEach(w=>w.classList.toggle('hide',+w.dataset.step!==currentStep));$('stepNumber').textContent=currentStep+1;$('stepTitle').textContent=STEPS[currentStep];$('stepCount').textContent=`Etapa ${currentStep+1} de ${STEPS.length}`;$('stepBar').style.width=((currentStep+1)/STEPS.length*100)+'%';$('prevBtn').disabled=currentStep===0;$('nextBtn').classList.toggle('hide',currentStep===4);$('generateBtn').classList.toggle('hide',currentStep!==4);document.querySelectorAll('.choice input').forEach(i=>i.closest('.choice').classList.toggle('selected',i.checked));}
 document.querySelectorAll('.choice input').forEach(i=>i.addEventListener('change',updateWizard));
