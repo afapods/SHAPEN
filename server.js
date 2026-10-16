@@ -325,6 +325,50 @@ app.post("/api/food-photo", authenticateSupabaseRequest, requireShapenPlan("ulti
     return res.json({ foods: String(parsed.foods || "Não foi possível identificar com confiança.").slice(0, 500), portion: String(parsed.portion || "Porção não estimada.").slice(0, 250), note: String(parsed.note || "Estimativa visual incerta; revise ingredientes e porções.").slice(0, 500) });
   } catch (e) { console.error("food-photo error:", e.message); return res.status(e.status || 502).json({ error: e.status === 503 ? e.message : "Não foi possível analisar a foto. Tente uma imagem mais nítida." }); }
 });
+app.post("/api/mercadopago/webhook", async (req, res) => {
+  const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const cfg = supabaseConfig();
+  if (!token || !cfg.url || !cfg.secretKey) return res.status(503).json({ error: "Webhook não configurado." });
+  const type = String(req.body?.type || req.query?.type || req.body?.topic || req.query?.topic || "");
+  const resourceId = String(req.body?.data?.id || req.query?.id || "").trim();
+  if (!resourceId) return res.status(200).json({ received: true, ignored: true });
+  try {
+    const headers = { Authorization: "Bearer " + token };
+    if (type === "subscription_preapproval" || type === "preapproval") {
+      const response = await fetch("https://api.mercadopago.com/preapproval/" + encodeURIComponent(resourceId), { headers });
+      const item = await response.json();
+      if (!response.ok) return res.status(200).json({ received: true, verified: false });
+      const parts = String(item.external_reference || "").split("|");
+      const userId = parts[0], tier = parts[1];
+      if (!userId || !SUBSCRIPTION_PLANS[tier]) return res.status(200).json({ received: true, ignored: true });
+      const map = { authorized: "active", paused: "paused", cancelled: "cancelled", canceled: "cancelled", pending: "pending" };
+      const status = map[String(item.status || "").toLowerCase()] || "pending";
+      await supabaseAdminRequest(cfg, "shapen_subscriptions?provider_subscription_id=eq." + encodeURIComponent(String(item.id)), {
+        method: "PATCH", headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ user_id: userId, plan: tier, provider: "mercadopago", provider_subscription_id: String(item.id), payment_method: "card", status, updated_at: new Date().toISOString() })
+      });
+      return res.status(200).json({ received: true, verified: true });
+    }
+    if (type === "payment") {
+      const response = await fetch("https://api.mercadopago.com/v1/payments/" + encodeURIComponent(resourceId), { headers });
+      const payment = await response.json();
+      if (!response.ok) return res.status(200).json({ received: true, verified: false });
+      const parts = String(payment.external_reference || "").split("|");
+      const userId = parts[0], tier = parts[1];
+      if (!userId || !SUBSCRIPTION_PLANS[tier] || payment.status !== "approved") return res.status(200).json({ received: true, ignored: true });
+      const end = new Date(Date.now() + 30 * 86400000).toISOString();
+      await supabaseAdminRequest(cfg, "shapen_subscriptions?user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=eq.pending", {
+        method: "PATCH", headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ provider_payment_id: String(payment.id), status: "active", current_period_end: end, updated_at: new Date().toISOString() })
+      });
+      return res.status(200).json({ received: true, verified: true });
+    }
+    return res.status(200).json({ received: true, ignored: true });
+  } catch (error) {
+    console.error("Mercado Pago webhook processing failed:", error.message);
+    return res.status(500).json({ error: "Não foi possível processar a notificação." });
+  }
+});
 app.get("/api/health", (_req, res) => res.json({ ok: true, aiConfigured: Boolean(process.env.OPENAI_API_KEY) }));
 app.get("*", (_req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 app.listen(PORT, () => console.log(`SHAPEN rodando em http://localhost:${PORT}`));
