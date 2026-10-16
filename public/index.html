@@ -243,7 +243,7 @@ async function submitNutritionAdapt(){
       <div class="card" style="background:#2a1c39">
         <h3>${escapeHtml(data.title || 'Cardápio adaptado')}</h3>
         <p class="muted small">${escapeHtml(data.summary || 'Revise as opções antes de aplicar.')}</p>
-        ${data.meals.map(m => `<div class="foodrow"><div class="foodicon">${escapeHtml(m.icon || '◉')}</div><div><strong>${escapeHtml(m.title || 'Refeição')}</strong><small>${escapeHtml(m.desc || '')}</small><small class="good">Alternativa: ${escapeHtml(m.alt || 'Escolha uma opção compatível com seu perfil.')}</small></div></div>`).join('')}
+        ${data.meals.map((m,i) => mealCard(m,i)).join('')}
         <div class="actions">
           <button class="btn" onclick="applyAdaptedMeals()">Usar este cardápio</button>
           <button class="btn secondary" onclick="discardAdaptedMeals()">Descartar</button>
@@ -285,4 +285,4 @@ function toast(msg){let old=document.querySelector('.toast');if(old)old.remove()
 function loadSaved(){try{profile=JSON.parse(localStorage.getItem('shapen_profile')||'null');plan=JSON.parse(localStorage.getItem('shapen_plan')||'null');done=new Set(JSON.parse(localStorage.getItem('shapen_done')||'[]'));if(profile){$('name').value=profile.name||'';$('target').value=profile.target||'';for(let k of ['age','sex','weight','height','activity','experience','days','duration','equipment','cardio','diet','meals','budget','cooking','avoid','limitations','conditions'])if($(k))$(k).value=profile[k]??$(k).value;let g=document.querySelector(`[name="goal"][value="${profile.goal}"]`);if(g)g.checked=true;}renderAll();}catch(e){console.warn('Não foi possível recuperar o perfil local.',e);}}
 updateWizard();loadSaved();
 </script>
-</body></html>sSS
+</body></html>
