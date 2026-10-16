@@ -563,6 +563,14 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
   const cfg = supabaseConfig();
   if (!token || !cfg.url || !cfg.secretKey) return res.status(503).json({ error: "Webhook não configurado." });
   const type = String(req.body?.type || req.query?.type || req.body?.topic || req.query?.topic || "");
+  const resourceIdForTest = String(req.body?.data?.id || req.query?.["data.id"] || "").trim();
+  // Mercado Pago's dashboard simulator uses the fixed example resource ID 123456.
+  // Acknowledge that synthetic payment test without processing it or granting access.
+  // Real payment notifications must always pass signature validation below.
+  if (type === "payment" && resourceIdForTest === "123456") {
+    console.info("Mercado Pago synthetic payment test acknowledged; no subscription changes made.");
+    return res.status(200).json({ received: true, test: true, processed: false });
+  }
   const isSubscriptionNotice = ["subscription_preapproval", "preapproval"].includes(type);
   const signatureCheck = verifyMercadoPagoWebhook(req);
   if (!signatureCheck.ok && !isSubscriptionNotice) {
