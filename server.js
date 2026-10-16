@@ -562,8 +562,10 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
   const cfg = supabaseConfig();
   if (!token || !cfg.url || !cfg.secretKey) return res.status(503).json({ error: "Webhook não configurado." });
+  const type = String(req.body?.type || req.query?.type || req.body?.topic || req.query?.topic || "");
+  const isSubscriptionNotice = ["subscription_preapproval", "preapproval"].includes(type);
   const signatureCheck = verifyMercadoPagoWebhook(req);
-  if (!signatureCheck.ok) {
+  if (!signatureCheck.ok && !isSubscriptionNotice) {
     if (signatureCheck.reason === "missing_secret") {
       console.error("Mercado Pago webhook rejected: configure MERCADOPAGO_WEBHOOK_SECRET in the server environment.");
       return res.status(503).json({ error: "Webhook sem chave de assinatura configurada." });
@@ -571,7 +573,12 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
     console.warn("Mercado Pago webhook rejected:", signatureCheck.reason);
     return res.status(401).json({ error: "Assinatura de notificação inválida." });
   }
-  const type = String(req.body?.type || req.query?.type || req.body?.topic || req.query?.topic || "");
+  // Mercado Pago documents that application-level Webhooks configuration is not
+  // available for Subscriptions. For these events, trust only the resource fetched
+  // directly from Mercado Pago API below; never grant access from the notification body.
+  if (!signatureCheck.ok && isSubscriptionNotice) {
+    console.info("Mercado Pago subscription notice will be verified against the authoritative API resource.");
+  }
   const resourceId = String(req.body?.data?.id || req.query?.id || "").trim();
   if (!resourceId) return res.status(200).json({ received: true, ignored: true });
   try {
