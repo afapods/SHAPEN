@@ -1,3 +1,4 @@
+import { randomUUID } from "node:crypto";
 import express from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -325,7 +326,7 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
   try {
     const baseUrl = String(process.env.APP_URL || "https://shapen.onrender.com").replace(/\/$/, "");
     const headers = { "Authorization": "Bearer " + token, "Content-Type": "application/json" };
-    const externalReference = req.shapenUser.id + "|" + tier + "|" + crypto.randomUUID();
+    const externalReference = req.shapenUser.id + "|" + tier + "|" + randomUUID();
     let response;
     if (paymentMethod === "pix") {
       // Pix checkout is a one-time payment. The customer must pay again each month.
