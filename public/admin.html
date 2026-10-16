@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#101014">
+<title>SHAPEN — Administração</title>
+<style>
+:root{color-scheme:dark;--bg:#101014;--panel:#19191f;--line:#303039;--text:#f6f6f8;--muted:#a4a4b0;--accent:#c7ff5e;--red:#ff7b7b;--yellow:#f3cf73}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 80% -10%,#343b2450,transparent 40%),var(--bg);color:var(--text);font:14px/1.5 Inter,system-ui,-apple-system,sans-serif}button,input{font:inherit}button{cursor:pointer}.wrap{width:min(1200px,calc(100% - 32px));margin:auto}.top{display:flex;justify-content:space-between;align-items:center;padding:24px 0;border-bottom:1px solid var(--line);gap:16px}.brand{font-weight:900;font-size:22px;letter-spacing:-1.3px}.brand span{color:var(--accent)}.label{font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}.btn{border:1px solid var(--line);background:#222229;color:var(--text);padding:10px 14px;border-radius:10px;font-weight:750}.btn.primary{background:var(--accent);border-color:var(--accent);color:#16180e}.btn:disabled{opacity:.5;cursor:wait}.hero{padding:32px 0 20px}.hero h1{font-size:clamp(28px,5vw,42px);letter-spacing:-2px;line-height:1.05;margin:7px 0}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.metric,.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}.metric .name{font-size:12px;color:var(--muted)}.metric .num{font-size:clamp(24px,3vw,32px);font-weight:850;letter-spacing:-1.4px;margin-top:8px}.metric .foot{font-size:11px;color:var(--muted);margin-top:4px}.columns{display:grid;grid-template-columns:1.4fr .8fr;gap:14px;margin:14px 0 30px}.panel h2{font-size:16px;margin:0 0 14px}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;white-space:nowrap}th,td{text-align:left;padding:12px 10px;border-bottom:1px solid var(--line);font-size:12px}th{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--muted)}.status{display:inline-block;border-radius:20px;padding:4px 8px;font-size:10px;font-weight:800;background:#303039;color:#d5d5df}.status.active,.status.authorized{background:#c7ff5e20;color:var(--accent)}.status.pending{background:#f3cf7320;color:var(--yellow)}.status.rejected,.status.cancelled,.status.expired{background:#ff7b7b20;color:var(--red)}.plan{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-bottom:1px solid var(--line);gap:12px}.plan:last-child{border:0}.plan strong{display:block;text-transform:capitalize}.plan small{color:var(--muted)}.bar{height:6px;border-radius:8px;background:#303039;margin-top:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--accent);width:0}.login{max-width:420px;margin:9vh auto;padding:26px;background:var(--panel);border:1px solid var(--line);border-radius:18px}.login h1{font-size:27px;letter-spacing:-1px;margin:5px 0}.field{display:grid;gap:7px;margin:16px 0}.field label{font-size:12px;color:var(--muted)}input{width:100%;background:#101014;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:12px;outline:none}input:focus{border-color:var(--accent)}.error{color:var(--red);font-size:12px;min-height:18px}.notice{border:1px solid #f3cf7340;background:#f3cf730c;border-radius:12px;padding:12px;color:#d8c994;font-size:12px;margin-top:14px}.hidden{display:none!important}.tools{display:flex;gap:8px;flex-wrap:wrap}.small{font-size:11px}.empty{padding:26px;text-align:center;color:var(--muted)}footer{padding:18px 0 30px;color:var(--muted);font-size:11px}
+@media(max-width:850px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.columns{grid-template-columns:1fr}}@media(max-width:480px){.wrap{width:calc(100% - 22px)}.metric,.panel{padding:13px}.top{padding:18px 0}.grid{gap:8px}.metric .num{font-size:24px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><div><div class="brand">SHAPEN<span>.</span></div><div class="label">Painel de administração</div></div><div class="tools"><button id="refresh" class="btn hidden">Atualizar dados</button><button id="logout" class="btn hidden">Sair</button></div></header>
+<section id="login" class="login">
+<div class="label">Acesso restrito</div><h1>Entre no painel</h1><p class="muted">Use sua conta administrativa do SHAPEN.</p>
+<form id="loginForm"><div class="field"><label for="email">E-mail</label><input id="email" type="email" autocomplete="username" required></div><div class="field"><label for="password">Senha</label><input id="password" type="password" autocomplete="current-password" required></div><button class="btn primary" style="width:100%" id="loginBtn">Entrar com segurança</button><div id="loginError" class="error"></div></form>
+<div class="notice">O e-mail precisa estar autorizado na variável <b>ADMIN_EMAILS</b> do Render. Este painel não cria contas nem altera dados de cobrança.</div>
+</section>
+<main id="dashboard" class="hidden">
+<section class="hero"><div class="label">Resumo do negócio</div><h1>Visão geral</h1><p class="muted">Acompanhe assinaturas e receita estimada em um só lugar.</p></section>
+<section class="grid">
+<div class="metric"><div class="name">Receita mensal estimada</div><div id="revenue" class="num">—</div><div class="foot">Planos ativos × preço de tabela</div></div>
+<div class="metric"><div class="name">Assinantes ativos</div><div id="active" class="num">—</div><div class="foot">Clientes com acesso vigente</div></div>
+<div class="metric"><div class="name">Pagamentos pendentes</div><div id="pending" class="num">—</div><div class="foot">Precisam de acompanhamento</div></div>
+<div class="metric"><div class="name">Cancelamentos</div><div id="cancelled" class="num">—</div><div class="foot">Registros de assinatura cancelada</div></div>
+</section>
+<section class="columns">
+<div class="panel"><h2>Assinaturas recentes</h2><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Plano</th><th>Status</th><th>Pagamento</th><th>Data</th></tr></thead><tbody id="rows"><tr><td colspan="5">Carregando…</td></tr></tbody></table></div><div id="tableEmpty" class="empty hidden">Ainda não há assinaturas registradas.</div></div>
+<div class="panel"><h2>Desempenho por plano</h2><div id="plans"></div><div class="notice">Receita estimada não desconta taxas, reembolsos, impostos ou falhas de renovação. Confirme os recebimentos no Mercado Pago.</div></div>
+</section>
+<div class="muted small" id="updated"></div>
+</main>
+<footer>SHAPEN Admin · Acesso restrito · Nunca compartilhe sua sessão.</footer>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+let cfg = null, accessToken = sessionStorage.getItem("shapen_admin_token") || "";
+const money = n => new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"}).format(Number(n||0));
+const date = value => value ? new Intl.DateTimeFormat("pt-BR",{dateStyle:"short"}).format(new Date(value)) : "—";
+const escapeHtml = value => String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+async function getConfig(){const r=await fetch("/api/config");cfg=await r.json();if(!r.ok||!cfg.supabaseUrl||!cfg.supabasePublishableKey)throw new Error("Autenticação não configurada. Confira as variáveis do Supabase no Render.");}
+async function signIn(email,password){const r=await fetch(cfg.supabaseUrl+"/auth/v1/token?grant_type=password",{method:"POST",headers:{"Content-Type":"application/json","apikey":cfg.supabasePublishableKey},body:JSON.stringify({email,password})});const data=await r.json();if(!r.ok)throw new Error(data.msg||data.message||data.error_description||"Não foi possível entrar.");accessToken=data.access_token;sessionStorage.setItem("shapen_admin_token",accessToken);}
+async function load(){const r=await fetch("/api/admin/overview",{headers:{Authorization:"Bearer "+accessToken}});const data=await r.json();if(r.status===401){sessionStorage.removeItem("shapen_admin_token");accessToken="";showLogin();throw new Error(data.error||"Entre novamente.");}if(!r.ok)throw new Error(data.error||"Falha ao carregar o painel.");render(data);showDashboard();}
+function showLogin(){ $("login").classList.remove("hidden");$("dashboard").classList.add("hidden");$("logout").classList.add("hidden");$("refresh").classList.add("hidden");}
+function showDashboard(){ $("login").classList.add("hidden");$("dashboard").classList.remove("hidden");$("logout").classList.remove("hidden");$("refresh").classList.remove("hidden");}
+function render(data){const m=data.metrics||{};$("revenue").textContent=money(m.estimatedMonthlyRevenue);$("active").textContent=m.activeSubscribers??0;$("pending").textContent=m.pendingPayments??0;$("cancelled").textContent=m.cancelledSubscriptions??0;
+const rows=data.subscriptions||[];$("rows").innerHTML=rows.map(s=>'<tr><td>'+escapeHtml(s.customer)+'<div class="muted small">'+escapeHtml(String(s.userId||"").slice(0,8))+'…</div></td><td>'+escapeHtml((s.plan||"—").toUpperCase())+'</td><td><span class="status '+escapeHtml(s.status)+'">'+escapeHtml(s.status)+'</span></td><td>'+escapeHtml(s.paymentMethod||"—")+'</td><td>'+escapeHtml(date(s.createdAt))+'</td></tr>').join("");$("tableEmpty").classList.toggle("hidden",rows.length>0);
+const plans=data.plans||[];const max=Math.max(1,...plans.map(p=>Number(p.active||0)));$("plans").innerHTML=plans.map(p=>'<div class="plan"><div><strong>'+escapeHtml(p.plan)+'</strong><small>'+Number(p.active||0)+' assinante(s)</small><div class="bar"><i style="width:'+Math.min(100,Number(p.active||0)/max*100)+'%"></i></div></div><b>'+money(p.estimatedMonthlyRevenue)+'/mês</b></div>').join("");
+$("updated").textContent="Atualizado em "+new Intl.DateTimeFormat("pt-BR",{dateStyle:"short",timeStyle:"short"}).format(new Date());}
+$("loginForm").addEventListener("submit",async e=>{e.preventDefault();$("loginError").textContent="";$("loginBtn").disabled=true;$("loginBtn").textContent="Verificando…";try{if(!cfg)await getConfig();await signIn($("email").value.trim(),$("password").value);await load();}catch(err){$("loginError").textContent=err.message||"Erro ao entrar.";}finally{$("loginBtn").disabled=false;$("loginBtn").textContent="Entrar com segurança";}});
+$("refresh").addEventListener("click",async()=>{ $("refresh").disabled=true;try{await load();}catch(e){alert(e.message);}finally{$("refresh").disabled=false;}});
+$("logout").addEventListener("click",()=>{sessionStorage.removeItem("shapen_admin_token");accessToken="";showLogin();});
+(async()=>{try{await getConfig();if(accessToken)await load();}catch(e){if(accessToken){sessionStorage.removeItem("shapen_admin_token");accessToken="";} $("loginError").textContent=e.message;showLogin();}})();
+</script>
+</body></html>
