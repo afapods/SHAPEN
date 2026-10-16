@@ -21,6 +21,58 @@ function client() {
   }
   return new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 }
+
+function supabaseConfig() {
+  return {
+    url: String(process.env.SUPABASE_URL || "").replace(/\/$/, ""),
+    publishableKey: process.env.SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_ANON_KEY || "",
+    secretKey: process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY || ""
+  };
+}
+async function authenticateSupabaseRequest(req, res, next) {
+  const cfg = supabaseConfig();
+  if (!cfg.url || !cfg.publishableKey || !cfg.secretKey) {
+    return res.status(503).json({ error: "Autenticação ainda não configurada. Configure SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY e SUPABASE_SECRET_KEY no Render." });
+  }
+  const authorization = String(req.headers.authorization || "");
+  const match = authorization.match(/^Bearer\s+(.+)$/i);
+  if (!match) return res.status(401).json({ error: "Entre na sua conta para continuar." });
+  try {
+    const response = await fetch(cfg.url + "/auth/v1/user", {
+      headers: { apikey: cfg.publishableKey, Authorization: "Bearer " + match[1] }
+    });
+    const user = await response.json();
+    if (!response.ok || !user?.id || !user?.email) return res.status(401).json({ error: "Sua sessão expirou. Entre novamente." });
+    req.shapenUser = { id: user.id, email: user.email };
+    req.shapenAccessToken = match[1];
+    req.shapenSupabase = cfg;
+    next();
+  } catch (error) {
+    console.error("Supabase auth validation failed:", error.message);
+    return res.status(502).json({ error: "Não foi possível validar sua sessão agora." });
+  }
+}
+async function supabaseAdminRequest(cfg, route, options = {}) {
+  const response = await fetch(cfg.url + "/rest/v1/" + route, {
+    ...options,
+    headers: {
+      apikey: cfg.secretKey,
+      Authorization: "Bearer " + cfg.secretKey,
+      "Content-Type": "application/json",
+      ...(options.headers || {})
+    }
+  });
+  const body = await response.text();
+  let data = null;
+  try { data = body ? JSON.parse(body) : null; } catch { data = body; }
+  if (!response.ok) {
+    const error = new Error("Falha ao consultar dados do SHAPEN.");
+    error.status = response.status;
+    console.error("Supabase database request failed:", response.status, String(body).slice(0, 500));
+    throw error;
+  }
+  return data;
+}
 function cleanProfile(p) {
   if (!p || typeof p !== "object") throw new Error("Perfil ausente.");
   const age = Number(p.age), weight = Number(p.weight), height = Number(p.height);
@@ -172,6 +224,37 @@ app.post("/api/adapt-meals", async (req, res) => {
 });
 
 const SUBSCRIPTION_PLANS = { basico: { title: "SHAPEN Básico", amount: 24.90 }, premium: { title: "SHAPEN Premium", amount: 59.90 }, ultimate: { title: "SHAPEN Ultimate", amount: 99.90 } };
+
+app.get("/api/config", (_req, res) => {
+  const cfg = supabaseConfig();
+  return res.json({ supabaseUrl: cfg.url || null, supabasePublishableKey: cfg.publishableKey || null, authConfigured: Boolean(cfg.url && cfg.publishableKey && cfg.secretKey) });
+});
+app.get("/api/me", authenticateSupabaseRequest, async (req, res) => {
+  try {
+    const [profiles, subscriptions] = await Promise.all([
+      supabaseAdminRequest(req.shapenSupabase, "shapen_profiles?select=display_name,fitness_profile&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&limit=1"),
+      supabaseAdminRequest(req.shapenSupabase, "shapen_subscriptions?select=plan,status,payment_method,current_period_end,created_at&user_id=eq." + encodeURIComponent(req.shapenUser.id) + "&order=created_at.desc&limit=10")
+    ]);
+    const active = (subscriptions || []).find(x => ["active", "authorized"].includes(x.status) && (!x.current_period_end || new Date(x.current_period_end).getTime() > Date.now())) || null;
+    return res.json({ user: req.shapenUser, profile: profiles?.[0] || null, subscription: active, subscriptions: subscriptions || [], authConfigured: true });
+  } catch (error) {
+    return res.status(502).json({ error: "Não foi possível carregar sua conta. Confira se o schema do Supabase foi aplicado." });
+  }
+});
+app.put("/api/profile", authenticateSupabaseRequest, async (req, res) => {
+  const displayName = String(req.body?.displayName || "").trim().slice(0, 80);
+  const fitnessProfile = req.body?.fitnessProfile && typeof req.body.fitnessProfile === "object" ? req.body.fitnessProfile : {};
+  try {
+    const rows = await supabaseAdminRequest(req.shapenSupabase, "shapen_profiles?on_conflict=user_id", {
+      method: "POST",
+      headers: { Prefer: "resolution=merge-duplicates,return=representation" },
+      body: JSON.stringify({ user_id: req.shapenUser.id, display_name: displayName || null, fitness_profile: fitnessProfile, updated_at: new Date().toISOString() })
+    });
+    return res.json({ profile: rows?.[0] || null });
+  } catch {
+    return res.status(502).json({ error: "Não foi possível salvar seu perfil." });
+  }
+});
 app.post("/api/checkout", async (req, res) => {
   const tier = String(req.body?.plan || "");
   const email = String(req.body?.email || "").trim().slice(0, 160);
