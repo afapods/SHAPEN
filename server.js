@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { randomUUID, createHmac, timingSafeEqual } from "node:crypto";
 import express from "express";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
@@ -534,10 +534,40 @@ app.post("/api/food-photo", authenticateSupabaseRequest, requireShapenPlan("ulti
     return res.json({ foods: String(parsed.foods || "Não foi possível identificar com confiança.").slice(0, 500), portion: String(parsed.portion || "Porção não estimada.").slice(0, 250), note: String(parsed.note || "Estimativa visual incerta; revise ingredientes e porções.").slice(0, 500) });
   } catch (e) { console.error("food-photo error:", e.message); return res.status(e.status || 502).json({ error: e.status === 503 ? e.message : "Não foi possível analisar a foto. Tente uma imagem mais nítida." }); }
 });
+function verifyMercadoPagoWebhook(req) {
+  const secret = String(process.env.MERCADOPAGO_WEBHOOK_SECRET || "").trim();
+  if (!secret) return { ok: false, reason: "missing_secret" };
+  const signature = String(req.headers["x-signature"] || "");
+  const requestId = String(req.headers["x-request-id"] || "");
+  const dataId = String(req.query["data.id"] || req.body?.data?.id || "").trim().toLowerCase();
+  const parts = Object.fromEntries(signature.split(",").map(part => {
+    const index = part.indexOf("=");
+    return index < 0 ? ["", ""] : [part.slice(0, index).trim(), part.slice(index + 1).trim()];
+  }));
+  if (!parts.ts || !parts.v1 || !dataId) return { ok: false, reason: "missing_signature_fields" };
+  const manifest = "id:" + dataId + ";" + (requestId ? "request-id:" + requestId + ";" : "") + "ts:" + parts.ts + ";";
+  const expected = createHmac("sha256", secret).update(manifest).digest("hex");
+  const actualBuffer = Buffer.from(parts.v1, "hex");
+  const expectedBuffer = Buffer.from(expected, "hex");
+  if (actualBuffer.length !== expectedBuffer.length || !timingSafeEqual(actualBuffer, expectedBuffer)) {
+    return { ok: false, reason: "invalid_signature" };
+  }
+  return { ok: true };
+}
+
 app.post("/api/mercadopago/webhook", async (req, res) => {
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
   const cfg = supabaseConfig();
   if (!token || !cfg.url || !cfg.secretKey) return res.status(503).json({ error: "Webhook não configurado." });
+  const signatureCheck = verifyMercadoPagoWebhook(req);
+  if (!signatureCheck.ok) {
+    if (signatureCheck.reason === "missing_secret") {
+      console.error("Mercado Pago webhook rejected: configure MERCADOPAGO_WEBHOOK_SECRET in the server environment.");
+      return res.status(503).json({ error: "Webhook sem chave de assinatura configurada." });
+    }
+    console.warn("Mercado Pago webhook rejected:", signatureCheck.reason);
+    return res.status(401).json({ error: "Assinatura de notificação inválida." });
+  }
   const type = String(req.body?.type || req.query?.type || req.body?.topic || req.query?.topic || "");
   const resourceId = String(req.body?.data?.id || req.query?.id || "").trim();
   if (!resourceId) return res.status(200).json({ received: true, ignored: true });
@@ -549,7 +579,13 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
       if (!response.ok) return res.status(200).json({ received: true, verified: false });
       const parts = String(item.external_reference || "").split("|");
       const userId = parts[0], tier = parts[1];
-      if (!userId || !SUBSCRIPTION_PLANS[tier]) return res.status(200).json({ received: true, ignored: true });
+      if (!userId || !SUBSCRIPTION_PLANS[tier] || !parts[2]) return res.status(200).json({ received: true, ignored: true });
+      const recurringAmount = Number(item.auto_recurring?.transaction_amount);
+      const recurringCurrency = String(item.auto_recurring?.currency_id || "").toUpperCase();
+      if (recurringCurrency !== "BRL" || !Number.isFinite(recurringAmount) || Math.abs(recurringAmount - SUBSCRIPTION_PLANS[tier].amount) > 0.01) {
+        console.warn("Mercado Pago subscription amount/currency mismatch:", String(item.id));
+        return res.status(200).json({ received: true, ignored: true, reason: "amount_currency_mismatch" });
+      }
       const map = { authorized: "active", paused: "paused", cancelled: "cancelled", canceled: "cancelled", pending: "pending", rejected: "rejected" };
       const status = map[String(item.status || "").toLowerCase()] || "pending";
       const periodEnd = item.next_payment_date && new Date(item.next_payment_date).getTime() > Date.now()
@@ -572,6 +608,13 @@ app.post("/api/mercadopago/webhook", async (req, res) => {
       const userId = parts[0], tier = parts[1];
       if (!userId || !SUBSCRIPTION_PLANS[tier] || !parts[2]) return res.status(200).json({ received: true, ignored: true });
       const paymentStatus = String(payment.status || "").toLowerCase();
+      const expectedAmount = SUBSCRIPTION_PLANS[tier].amount;
+      const actualAmount = Number(payment.transaction_amount);
+      const currency = String(payment.currency_id || "").toUpperCase();
+      if (currency !== "BRL" || !Number.isFinite(actualAmount) || Math.abs(actualAmount - expectedAmount) > 0.01) {
+        console.warn("Mercado Pago payment amount/currency mismatch:", String(payment.id));
+        return res.status(200).json({ received: true, ignored: true, reason: "amount_currency_mismatch" });
+      }
       if (paymentStatus === "approved") {
         const end = new Date(Date.now() + 30 * 86400000).toISOString();
         await supabaseAdminRequest(cfg, "shapen_subscriptions?external_reference=eq." + encodeURIComponent(externalReference) + "&user_id=eq." + encodeURIComponent(userId) + "&plan=eq." + encodeURIComponent(tier) + "&payment_method=eq.pix&status=eq.pending", {
