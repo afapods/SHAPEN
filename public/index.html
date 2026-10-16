@@ -30,9 +30,9 @@
 .plans-note-icon{display:grid;place-items:center;flex-shrink:0;width:36px;height:36px;border-radius:11px;background:#4b3265;color:var(--lime);font-size:19px}
 .plans-note strong{display:block;font-size:14px}
 .plans-note p{margin:3px 0 0;color:var(--muted);font-size:12px}
-.plans-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:stretch}
+.plans-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;align-items:stretch}
 .plan-card{position:relative;padding:24px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(155deg,#39274d,#2b1d39);min-width:0}
-.plan-card-premium{border-color:#b69cff;box-shadow:0 0 0 1px #b69cff22}
+.plan-card-premium{border-color:#b69cff;box-shadow:0 0 0 1px #b69cff22}\n.plan-card-ultimate{border-color:#d7b56d;box-shadow:0 0 0 1px #d7b56d22}\n.plan-card-ultimate .plan-symbol{background:#4a3b2b;color:#f2d28b}\n.plan-card-ultimate .plan-label{color:#f2d28b}
 .plan-popular{position:absolute;top:-11px;right:18px;background:var(--lime);color:#241633;border-radius:999px;padding:5px 10px;font-size:10px;font-weight:900;letter-spacing:.7px}
 .plan-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}
 .plan-label{font-size:10px;font-weight:850;letter-spacing:1.6px;color:var(--muted)}
@@ -55,7 +55,7 @@
 .plan-selection h3{margin:0 0 5px}
 .plan-selection p{margin:0}
 .plan-disclaimer{font-size:11px;line-height:1.5;color:var(--muted);margin:14px 2px}
-@media(max-width:700px){.plans-grid{grid-template-columns:1fr}.plan-description{min-height:0}.plan-card{padding:21px}}
+@media(max-width:980px){.plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}\n@media(max-width:700px){.plans-grid{grid-template-columns:1fr}.plan-description{min-height:0}.plan-card{padding:21px}}
 </style>
 </head>
 <body>
@@ -194,6 +194,23 @@
     <li><span>✓</span>Acesso prioritário a novos recursos SHAPEN</li>
    </ul>
   </article>
+  <article class="plan-card plan-card-ultimate">
+   <div class="plan-popular">EXPERIÊNCIA COMPLETA</div>
+   <div class="plan-top"><span class="plan-label">PARA IR ALÉM</span><span class="plan-symbol">♛</span></div>
+   <h2>Ultimate</h2><p class="plan-description">A experiência mais completa do SHAPEN, com ferramentas avançadas para sua rotina.</p>
+   <div class="plan-price"><strong>R$ 99,90</strong><span>/ mês</span></div>
+   <p class="plan-billing">Cobrança mensal</p>
+   <button class="btn plan-button" onclick="choosePlan('ultimate')">Escolher Ultimate</button>
+   <div class="plan-divider"></div>
+   <p class="plan-includes">Tudo do Premium, mais</p>
+   <ul class="plan-features">
+    <li><span>✓</span>Adaptações de treino e refeições mais completas</li>
+    <li><span>✓</span>Planejamento semanal integrado de treino e alimentação</li>
+    <li><span>✓</span>Relatórios de evolução e consistência</li>
+    <li><span>✓</span>Mais personalização de acordo com sua rotina</li>
+    <li><span>✓</span>Acesso antecipado a recursos avançados</li>
+   </ul>
+  </article>
  </div>
  <div class="plan-selection card" id="planSelection" aria-live="polite">
   <h3>Seu plano escolhido</h3><p id="planSelectionText" class="muted small">Ainda não escolheu um plano.</p>
@@ -209,7 +226,7 @@
 </div>
 <script>
 function choosePlan(tier){
- const plans={basico:{name:'Básico',price:'R$ 24,90/mês'},premium:{name:'Premium',price:'R$ 59,90/mês'}};
+ const plans={basico:{name:'Básico',price:'R$ 24,90/mês'},premium:{name:'Premium',price:'R$ 59,90/mês'},ultimate:{name:'Ultimate',price:'R$ 99,90/mês'}};
  const chosen=plans[tier];
  if(!chosen)return;
  localStorage.setItem('shapen_selected_plan',tier);
