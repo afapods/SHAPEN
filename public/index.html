@@ -155,83 +155,82 @@ function renderNutrition(){let root=$('nutritionContent');if(!profile||!plan){ro
 function adaptNutrition(){
   const root = $('nutritionContent');
   let box = document.getElementById('nutritionAdaptBox');
-
-  if (box) {
-    box.remove();
-    return;
-  }
-
+  if (box) { box.remove(); return; }
   box = document.createElement('div');
   box.id = 'nutritionAdaptBox';
   box.className = 'card';
   box.style.marginTop = '16px';
-
   box.innerHTML = `
     <h2>Adaptar minhas refeições</h2>
-    <p class="muted small">Conte o que você gostaria de trocar.</p>
-    <textarea id="nutritionAdaptRequest"
-      placeholder="Ex.: trocar frango por ovos ou tofu"
-      style="width:100%;min-height:90px;padding:12px;border-radius:10px;background:#241633;color:#fff;border:1px solid #5b4274"></textarea>
-    <div style="display:flex;gap:8px;margin-top:12px">
-      <button class="btn" onclick="submitNutritionAdapt()">Aplicar adaptação</button>
+    <p class="muted small">Conte o que você gostaria de mudar. A IA vai montar novas opções em cartões para você revisar antes de aplicar.</p>
+    <textarea id="nutritionAdaptRequest" class="field" placeholder="Ex.: trocar frango por ovos, reduzir o custo e sugerir opções mais rápidas" style="min-height:90px"></textarea>
+    <div class="actions">
+      <button class="btn" id="nutritionAdaptSubmit" onclick="submitNutritionAdapt()">Gerar cardápio adaptado</button>
       <button class="btn secondary" onclick="document.getElementById('nutritionAdaptBox').remove()">Cancelar</button>
     </div>
-    <p id="nutritionAdaptStatus" class="muted small"></p>
+    <p id="nutritionAdaptStatus" class="muted small" aria-live="polite"></p>
+    <div id="nutritionAdaptResults" class="stack"></div>
   `;
-
   root.appendChild(box);
   box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
- async function submitNutritionAdapt() {
+async function submitNutritionAdapt(){
   const input = $('nutritionAdaptRequest');
   const status = $('nutritionAdaptStatus');
-  const button = document.querySelector('#nutritionAdaptBox .btn');
+  const button = $('nutritionAdaptSubmit');
+  const results = $('nutritionAdaptResults');
   const request = input?.value.trim();
-
-  if (!request) {
-    status.textContent = 'Escreva o que deseja adaptar.';
-    return;
-  }
-
-  if (!profile || !plan) {
-    status.textContent = 'Configure seu perfil e crie um plano primeiro.';
-    return;
-  }
-
+  if (!request) { status.textContent = 'Escreva o que deseja adaptar.'; return; }
+  if (!profile || !plan) { status.textContent = 'Configure seu perfil e crie um plano primeiro.'; return; }
   button.disabled = true;
-  button.textContent = 'Preparando sugestão...';
-  status.textContent = 'A IA está analisando seu pedido.';
-
+  button.textContent = 'Montando cardápio...';
+  status.textContent = 'A IA está preparando novas opções para seu perfil.';
+  results.innerHTML = '';
   try {
-    const res = await fetch('/api/coach', {
+    const res = await fetch('/api/adapt-meals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        message: 'Sugira adaptações para estas refeições: ' +
-          request +
-          '. Responda em português, com substituições práticas e flexíveis, considerando o perfil e as restrições informadas. Não faça prescrição clínica.',
-        profile,
-        plan
-      })
+      body: JSON.stringify({ request, profile, plan })
     });
-
     const data = await res.json();
-
-    if (!res.ok) {
-      throw new Error(data.error || 'Não foi possível gerar a sugestão.');
-    }
-
-    status.textContent = data.reply ||
-      'Não foi possível gerar uma sugestão desta vez.';
+    if (!res.ok) throw new Error(data.error || 'Não foi possível gerar o cardápio.');
+    if (!Array.isArray(data.meals) || !data.meals.length) throw new Error('A IA não retornou refeições para mostrar.');
+    results.innerHTML = `
+      <div class="card" style="background:#2a1c39">
+        <h3>${escapeHtml(data.title || 'Cardápio adaptado')}</h3>
+        <p class="muted small">${escapeHtml(data.summary || 'Revise as opções antes de aplicar.')}</p>
+        ${data.meals.map(m => `<div class="foodrow"><div class="foodicon">${escapeHtml(m.icon || '◉')}</div><div><strong>${escapeHtml(m.title || 'Refeição')}</strong><small>${escapeHtml(m.desc || '')}</small><small class="good">Alternativa: ${escapeHtml(m.alt || 'Escolha uma opção compatível com seu perfil.')}</small></div></div>`).join('')}
+        <div class="actions">
+          <button class="btn" onclick="applyAdaptedMeals()">Usar este cardápio</button>
+          <button class="btn secondary" onclick="discardAdaptedMeals()">Descartar</button>
+        </div>
+      </div>`;
+    window.shapenPendingMeals = data.meals;
+    status.textContent = 'Confira as refeições. Seu plano atual só muda se você clicar em “Usar este cardápio”.';
   } catch (error) {
-    status.textContent =
-      error.message || 'Falha ao conectar com a IA. Tente novamente.';
+    status.textContent = error.message || 'Falha ao conectar com a IA. Tente novamente.';
   } finally {
     button.disabled = false;
-    button.textContent = 'Aplicar adaptação';
+    button.textContent = 'Gerar cardápio adaptado';
   }
 }
- function shoppingList(p){let base=p.diet==='vegan'?['Tofu ou proteína vegetal','Feijão, lentilha e grão-de-bico','Aveia e arroz','Frutas da estação','Legumes e verduras','Batata ou mandioca']:p.diet==='vegetarian'?['Ovos e/ou tofu','Feijão, lentilha e grão-de-bico','Iogurte ou alternativa vegetal','Aveia e arroz','Frutas da estação','Legumes e verduras']:['Ovos ou alternativa vegetal','Frango, peixe ou tofu','Feijão e lentilha','Arroz e aveia','Frutas da estação','Legumes e verduras'];if(p.avoid)base.push('Verificar ingredientes e rótulos: '+p.avoid);return base;}
+function applyAdaptedMeals(){
+  const meals = window.shapenPendingMeals;
+  if (!Array.isArray(meals) || !meals.length) { toast('Gere um cardápio antes de aplicar.'); return; }
+  plan.meals = meals;
+  localStorage.setItem('shapen_plan', JSON.stringify(plan));
+  window.shapenPendingMeals = null;
+  renderNutrition();
+  toast('Cardápio atualizado e salvo neste dispositivo.');
+}
+function discardAdaptedMeals(){
+  window.shapenPendingMeals = null;
+  const results = $('nutritionAdaptResults');
+  if (results) results.innerHTML = '';
+  const status = $('nutritionAdaptStatus');
+  if (status) status.textContent = 'Sugestão descartada. Seu cardápio atual continua igual.';
+}
+function shoppingList(p){let base=p.diet==='vegan'?['Tofu ou proteína vegetal','Feijão, lentilha e grão-de-bico','Aveia e arroz','Frutas da estação','Legumes e verduras','Batata ou mandioca']:p.diet==='vegetarian'?['Ovos e/ou tofu','Feijão, lentilha e grão-de-bico','Iogurte ou alternativa vegetal','Aveia e arroz','Frutas da estação','Legumes e verduras']:['Ovos ou alternativa vegetal','Frango, peixe ou tofu','Feijão e lentilha','Arroz e aveia','Frutas da estação','Legumes e verduras'];if(p.avoid)base.push('Verificar ingredientes e rótulos: '+p.avoid);return base;}
 function toggleTask(id,on){if(on)done.add(id);else done.delete(id);localStorage.setItem('shapen_done',JSON.stringify([...done]));renderHome();}
 function quickAsk(q){$('chatInput').value=q;sendChat(q);}
 $('chatForm').addEventListener('submit',e=>{e.preventDefault();let q=$('chatInput').value.trim();if(q)sendChat(q);});
