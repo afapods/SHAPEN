@@ -300,7 +300,9 @@ app.get("/api/admin/overview", authenticateSupabaseRequest, requireShapenAdmin, 
     const paid = all.filter(s => ["active", "authorized", "cancelled"].includes(String(s.status).toLowerCase()));
     const recent = all.slice(0, 100).map(s => ({
       id: s.id, userId: s.user_id, customer: profileByUser.get(s.user_id) || "Cliente SHAPEN", email: emailByUser.get(s.user_id) || "",
-      plan: s.plan, status: s.status, paymentMethod: s.payment_method, provider: s.provider,
+      plan: s.plan,
+      status: String(s.status).toLowerCase() === "pending" && new Date(s.created_at).getTime() <= now - 24 * 60 * 60 * 1000 ? "expired" : s.status,
+      paymentMethod: s.payment_method, provider: s.provider,
       createdAt: s.created_at, currentPeriodEnd: s.current_period_end, cancelledAt: s.cancelled_at
     }));
     const users = new Set(all.map(s => s.user_id));
@@ -309,7 +311,8 @@ app.get("/api/admin/overview", authenticateSupabaseRequest, requireShapenAdmin, 
         activeSubscribers: new Set(active.map(s => s.user_id)).size,
         estimatedMonthlyRevenue: Math.round(monthlyRevenue * 100) / 100,
         totalSubscriptions: all.length,
-        pendingPayments: all.filter(s => String(s.status).toLowerCase() === "pending").length,
+        pendingPayments: all.filter(s => String(s.status).toLowerCase() === "pending" && new Date(s.created_at).getTime() > now - 24 * 60 * 60 * 1000).length,
+        stalePendingAttempts: all.filter(s => String(s.status).toLowerCase() === "pending" && new Date(s.created_at).getTime() <= now - 24 * 60 * 60 * 1000).length,
         cancelledSubscriptions: all.filter(s => String(s.status).toLowerCase() === "cancelled").length,
         registeredPayingCustomers: users.size,
         paidRecords: paid.length
@@ -380,21 +383,32 @@ app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
   if (!chosen) return res.status(400).json({ error: "Plano inválido." });
   if (!["card", "pix"].includes(paymentMethod)) return res.status(400).json({ error: "Forma de pagamento inválida." });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: "Informe um e-mail válido." });
-  if (paymentMethod === "card") {
-    try {
-      const existing = await supabaseAdminRequest(req.shapenSupabase,
-        "shapen_subscriptions?select=id,plan,status&user_id=eq." + encodeURIComponent(req.shapenUser.id) +
-        "&provider=eq.mercadopago&payment_method=eq.card&order=created_at.desc&limit=20");
-      const pendingOrActive = (existing || []).find(x => ["pending", "active", "authorized"].includes(String(x.status || "").toLowerCase()));
-      if (pendingOrActive) {
-        return res.status(409).json({ error: pendingOrActive.status === "pending"
-          ? "Você já tem uma assinatura de cartão aguardando confirmação. Não inicie outro checkout para evitar duplicidade; aguarde a confirmação ou fale com o suporte."
-          : "Você já tem uma assinatura recorrente ativa. Cancele a renovação atual antes de contratar outro plano, para evitar cobranças duplicadas." });
-      }
-    } catch (error) {
-      console.error("Could not check existing subscriptions:", error.message);
-      return res.status(502).json({ error: "Não foi possível verificar suas assinaturas atuais. Nenhum novo checkout foi criado; tente novamente." });
+  // Avoid duplicate checkout attempts across both payment methods while allowing a fresh retry
+  // after an abandoned checkout has been pending for 30 minutes.
+  try {
+    const existing = await supabaseAdminRequest(req.shapenSupabase,
+      "shapen_subscriptions?select=id,plan,status,payment_method,current_period_end,created_at&user_id=eq." + encodeURIComponent(req.shapenUser.id) +
+      "&provider=eq.mercadopago&order=created_at.desc&limit=50");
+    const now = Date.now();
+    const active = (existing || []).find(x => {
+      const status = String(x.status || "").toLowerCase();
+      const end = x.current_period_end ? new Date(x.current_period_end).getTime() : null;
+      return ["active", "authorized"].includes(status) && (!end || (Number.isFinite(end) && end > now));
+    });
+    if (active) {
+      return res.status(409).json({ error: "Você já tem um plano SHAPEN ativo. Para evitar cobranças duplicadas, aguarde o fim do período atual ou gerencie sua assinatura." });
     }
+    const recentPending = (existing || []).find(x => {
+      if (String(x.status || "").toLowerCase() !== "pending") return false;
+      const created = new Date(x.created_at || 0).getTime();
+      return Number.isFinite(created) && created > now - 30 * 60 * 1000;
+    });
+    if (recentPending) {
+      return res.status(409).json({ error: "Você já iniciou um checkout recentemente. Se ainda estiver aberto, conclua-o; se desistiu, aguarde 30 minutos para iniciar outra tentativa. Nenhuma cobrança é confirmada sem aprovação do Mercado Pago." });
+    }
+  } catch (error) {
+    console.error("Could not check existing checkouts:", error.message);
+    return res.status(502).json({ error: "Não foi possível verificar suas tentativas de pagamento. Nenhum novo checkout foi criado; tente novamente." });
   }
   const token = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!token) return res.status(503).json({ error: "Checkout ainda não ativado: falta configurar MERCADOPAGO_ACCESS_TOKEN nas variáveis do servidor." });
