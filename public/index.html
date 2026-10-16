@@ -56,10 +56,60 @@
 .plan-selection p{margin:0}
 .plan-disclaimer{font-size:11px;line-height:1.5;color:var(--muted);margin:14px 2px}
 @media(max-width:980px){.plans-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}\n@media(max-width:700px){.plans-grid{grid-template-columns:1fr}.plan-description{min-height:0}.plan-card{padding:21px}}
+
+.auth-gate{max-width:1160px;margin:0 auto;padding:28px 22px 18px;min-height:100vh}
+.auth-brand{display:flex;align-items:center;gap:12px;margin:0 0 38px}
+.auth-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(320px,.8fr);gap:56px;align-items:center;min-height:calc(100vh - 150px)}
+.auth-story h1{font-size:clamp(38px,6vw,68px);line-height:.99;letter-spacing:-3px;margin:14px 0 20px}.auth-story h1 span{color:var(--lime)}
+.auth-story>p{max-width:480px;color:var(--muted);font-size:17px;margin:0 0 30px}
+.auth-benefit{display:flex;gap:14px;align-items:flex-start;margin:18px 0}.auth-benefit>span{display:grid;place-items:center;width:40px;height:40px;flex-shrink:0;border-radius:13px;background:#4b3265;color:var(--lime);font-size:19px}.auth-benefit b,.auth-benefit small{display:block}.auth-benefit small{color:var(--muted);margin-top:3px}
+.auth-panel{background:linear-gradient(155deg,#38264c,#281b35);border:1px solid var(--line);border-radius:25px;padding:28px;box-shadow:0 25px 70px #10091666}.auth-panel h2{font-size:25px;letter-spacing:-.8px;margin:8px 0 4px}.auth-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;background:#21162c;padding:5px;border-radius:13px;margin-bottom:22px}.auth-tab{border:0;border-radius:10px;padding:10px;background:transparent;color:var(--muted);font-weight:800}.auth-tab.active{background:#4a3265;color:var(--text)}.auth-submit{width:100%;margin-top:6px}.auth-message{min-height:20px;color:var(--lime);font-size:12px;margin:12px 0}.auth-legal,.auth-footer{font-size:11px;color:#a99ab8;line-height:1.6}.auth-footer{text-align:center;margin-top:28px}.auth-plan{display:grid;grid-template-columns:1fr auto;gap:9px;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}.auth-plan b,.auth-plan small{display:block}.auth-plan small{color:var(--muted);font-size:11px}.auth-plan strong{font-size:16px;white-space:nowrap}.auth-plan strong span{font-size:10px;color:var(--muted);font-weight:400}.auth-plan button{grid-column:1/-1;width:100%;padding:9px}.auth-plan.featured{background:#4b326522;border:1px solid #9c7ec4;border-radius:13px;padding:13px;margin:8px -4px}.auth-plan:last-of-type{margin-bottom:12px}
+@media(max-width:800px){.auth-grid{grid-template-columns:1fr;gap:25px;min-height:auto}.auth-story h1{font-size:42px;letter-spacing:-2px}.auth-story>p{font-size:14px}.auth-brand{margin-bottom:26px}.auth-panel{padding:21px}.auth-gate{padding:18px 15px}.auth-story .auth-benefit{margin:12px 0}}
+
 </style>
 </head>
 <body>
-<div class="shell">
+
+<section id="authGate" class="auth-gate">
+  <div class="auth-brand"><div class="mark">s</div><div><div class="brandname">SHAPEN</div><div class="tag">fitness inteligente, feito para você</div></div></div>
+  <div class="auth-grid">
+    <div class="auth-story">
+      <div class="eyebrow">SEU PRÓXIMO NÍVEL COMEÇA AQUI</div>
+      <h1>Treino e nutrição.<br><span>Do seu jeito.</span></h1>
+      <p>Uma rotina que acompanha sua vida, com ferramentas inteligentes para ajudar você a manter consistência.</p>
+      <div class="auth-benefit"><span>✦</span><div><b>Personalizado para sua rotina</b><small>Estruture seus treinos e refeições com mais clareza.</small></div></div>
+      <div class="auth-benefit"><span>◈</span><div><b>Seu progresso em um só lugar</b><small>Guarde sua evolução vinculada à sua conta.</small></div></div>
+      <div class="auth-benefit"><span>↗</span><div><b>Ferramentas para cada etapa</b><small>Escolha o plano que combina com seu objetivo.</small></div></div>
+    </div>
+    <div class="auth-panel">
+      <div id="authForms">
+        <div class="auth-tabs"><button type="button" class="auth-tab active" id="loginTab" onclick="setAuthMode('login')">Entrar</button><button type="button" class="auth-tab" id="signupTab" onclick="setAuthMode('signup')">Criar conta</button></div>
+        <h2 id="authTitle">Bem-vindo de volta</h2><p id="authSubtitle" class="muted small">Entre para continuar sua jornada no SHAPEN.</p>
+        <form id="authForm">
+          <div class="formrow"><label class="label" for="authEmail">E-mail</label><input class="field" id="authEmail" type="email" autocomplete="email" placeholder="voce@email.com" required maxlength="160"></div>
+          <div class="formrow"><label class="label" for="authPassword">Senha</label><input class="field" id="authPassword" type="password" autocomplete="current-password" placeholder="Pelo menos 8 caracteres" required minlength="8" maxlength="128"></div>
+          <div class="formrow hide" id="authConfirmWrap"><label class="label" for="authConfirm">Confirmar senha</label><input class="field" id="authConfirm" type="password" autocomplete="new-password" placeholder="Digite a senha novamente" minlength="8" maxlength="128"></div>
+          <button class="btn auth-submit" id="authSubmit" type="submit">Entrar na minha conta</button>
+        </form>
+        <p class="auth-message" id="authMessage" aria-live="polite"></p>
+        <p class="auth-legal">Ao continuar, você concorda em usar o SHAPEN como ferramenta educativa de bem-estar. Não substitui orientação profissional de saúde.</p>
+      </div>
+      <div id="subscriptionGate" class="hide">
+        <div class="eyebrow">ESCOLHA SEU ACESSO</div><h2>Seu plano, seu ritmo.</h2><p class="muted small">Escolha um plano para continuar. As ferramentas serão liberadas após a confirmação da assinatura.</p>
+        <div class="auth-plan"><div><b>Básico</b><small>Treino, refeições e progresso básico</small></div><strong>R$ 24,90<span>/mês</span></strong><button class="btn secondary" onclick="beginCheckout('basico')">Escolher Básico</button></div>
+        <div class="auth-plan featured"><div><b>Premium</b><small>Copiloto e adaptações com IA</small></div><strong>R$ 59,90<span>/mês</span></strong><button class="btn" onclick="beginCheckout('premium')">Escolher Premium</button></div>
+        <div class="auth-plan"><div><b>Ultimate</b><small>Diário por foto e ferramentas avançadas</small></div><strong>R$ 99,90<span>/mês</span></strong><button class="btn secondary" onclick="beginCheckout('ultimate')">Escolher Ultimate</button></div>
+        <div class="formrow"><label class="label" for="authPaymentMethod">Forma de pagamento</label><select id="authPaymentMethod" class="field"><option value="card">Cartão de crédito — mensal recorrente</option><option value="pix">Pix — pagamento de um mês</option></select></div>
+        <p class="auth-message" id="checkoutMessage" aria-live="polite"></p>
+        <button class="btn ghost" onclick="authSignOut()">Sair da conta</button>
+      </div>
+      <div id="authSetupMissing" class="notice hide"><b>Configuração pendente</b><p>O cadastro seguro ainda depende de conectar o projeto Supabase ao Render. Nenhum dado foi enviado.</p></div>
+    </div>
+  </div>
+  <div class="auth-footer">SHAPEN · Seu espaço de evolução</div>
+</section>
+
+<div class="shell" id="appShell" style="display:none">
 <header class="top">
  <div class="brand"><div class="mark">s</div><div><div class="brandname">SHAPEN</div><div class="tag">fitness inteligente, feito para você</div></div></div>
  <div class="status" id="topStatus">● MODO DEMONSTRAÇÃO</div>
@@ -422,4 +472,95 @@ function stopVoiceCopilot(){if(voiceRecognition)voiceRecognition.stop();voiceRec
 function loadSaved(){try{profile=JSON.parse(localStorage.getItem('shapen_profile')||'null');plan=JSON.parse(localStorage.getItem('shapen_plan')||'null');done=new Set(JSON.parse(localStorage.getItem('shapen_done')||'[]'));if(profile){$('name').value=profile.name||'';$('target').value=profile.target||'';for(let k of ['age','sex','weight','height','activity','experience','days','duration','equipment','cardio','diet','meals','budget','cooking','avoid','limitations','conditions'])if($(k))$(k).value=profile[k]??$(k).value;let g=document.querySelector(`[name="goal"][value="${profile.goal}"]`);if(g)g.checked=true;}renderAll();renderPlanSelection();renderProgress();buildWeeklyReview();}catch(e){console.warn('Não foi possível recuperar o perfil local.',e);}}
 updateWizard();loadSaved();
 </script>
+
+<script>
+let shapenSupabase=null, shapenAuthMode='login', shapenSession=null;
+function setAuthMode(mode){
+ shapenAuthMode=mode;
+ $('loginTab').classList.toggle('active',mode==='login');$('signupTab').classList.toggle('active',mode==='signup');
+ $('authTitle').textContent=mode==='login'?'Bem-vindo de volta':'Crie sua conta';
+ $('authSubtitle').textContent=mode==='login'?'Entre para continuar sua jornada no SHAPEN.':'Comece sua jornada com uma conta segura.';
+ $('authSubmit').textContent=mode==='login'?'Entrar na minha conta':'Criar minha conta';
+ $('authConfirmWrap').classList.toggle('hide',mode!=='signup');
+ $('authPassword').autocomplete=mode==='login'?'current-password':'new-password';
+ $('authMessage').textContent='';
+}
+async function initializeShapenAuth(){
+ try{
+  const r=await fetch('/api/config');const cfg=await r.json();
+  if(!cfg.authConfigured||!cfg.supabaseUrl||!cfg.supabasePublishableKey||!window.supabase?.createClient){
+   $('authForms').classList.add('hide');$('subscriptionGate').classList.add('hide');$('authSetupMissing').classList.remove('hide');
+   $('authSetupMissing').innerHTML='<b>Falta conectar o sistema de contas</b><p>O próximo passo é criar um projeto Supabase e configurar SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY e SUPABASE_SECRET_KEY no Render. O SHAPEN não vai liberar ferramentas pagas antes dessa configuração.</p>';
+   return;
+  }
+  shapenSupabase=window.supabase.createClient(cfg.supabaseUrl,cfg.supabasePublishableKey);
+  const {data}=await shapenSupabase.auth.getSession();shapenSession=data.session;
+  shapenSupabase.auth.onAuthStateChange((_event,session)=>{shapenSession=session;setTimeout(()=>refreshShapenAccess(),0)});
+  await refreshShapenAccess();
+ }catch(e){$('authMessage').textContent='Não foi possível iniciar o login. Atualize a página e tente novamente.';}
+}
+async function refreshShapenAccess(){
+ if(!shapenSupabase||!shapenSession){
+  $('authForms').classList.remove('hide');$('subscriptionGate').classList.add('hide');$('authSetupMissing').classList.add('hide');$('appShell').style.display='none';return;
+ }
+ $('authForms').classList.add('hide');$('authSetupMissing').classList.add('hide');$('subscriptionGate').classList.remove('hide');$('appShell').style.display='none';
+ try{
+  const r=await fetch('/api/me',{headers:{Authorization:'Bearer '+shapenSession.access_token}});const data=await r.json();
+  if(!r.ok)throw new Error(data.error||'Não foi possível validar sua conta.');
+  if(data.subscription&&['active','authorized'].includes(data.subscription.status)){
+   $('authGate').classList.add('hide');$('appShell').style.display='block';
+   const plan=data.subscription.plan;
+   $('topStatus').textContent='● PLANO '+plan.toUpperCase();
+   window.shapenPlan=plan;applyPlanVisibility(plan);
+   return;
+  }
+  $('authGate').classList.remove('hide');$('authForms').classList.add('hide');$('subscriptionGate').classList.remove('hide');
+  $('checkoutMessage').textContent='Conta conectada: '+(data.user?.email||'').replace(/[<>]/g,'')+'. Escolha um plano para continuar.';
+ }catch(e){
+  $('authForms').classList.add('hide');$('subscriptionGate').classList.add('hide');$('authSetupMissing').classList.remove('hide');
+  $('authSetupMissing').innerHTML='<b>Não foi possível validar o acesso</b><p>'+escapeHtml(e.message||'Confira a configuração do Supabase e se o arquivo supabase/schema.sql foi executado.')+'</p>';
+ }
+}
+$('authForm').addEventListener('submit',async e=>{
+ e.preventDefault();if(!shapenSupabase){$('authMessage').textContent='Sistema de contas ainda não configurado.';return}
+ const email=$('authEmail').value.trim(),password=$('authPassword').value;
+ if(shapenAuthMode==='signup'&&password!==$('authConfirm').value){$('authMessage').textContent='As senhas não coincidem.';return}
+ $('authSubmit').disabled=true;$('authSubmit').textContent='Aguarde...';
+ try{
+  if(shapenAuthMode==='signup'){
+   const {data,error}=await shapenSupabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin+'/'}});if(error)throw error;
+   if(!data.session){$('authMessage').textContent='Conta criada. Confira seu e-mail para confirmar o cadastro e depois entre.';setAuthMode('login');}
+   else{$('authMessage').textContent='Conta criada com sucesso.';shapenSession=data.session;await refreshShapenAccess();}
+  }else{
+   const {data,error}=await shapenSupabase.auth.signInWithPassword({email,password});if(error)throw error;
+   shapenSession=data.session;await refreshShapenAccess();
+  }
+ }catch(error){$('authMessage').textContent=error.message||'Não foi possível entrar. Confira e tente novamente.';}
+ finally{$('authSubmit').disabled=false;$('authSubmit').textContent=shapenAuthMode==='login'?'Entrar na minha conta':'Criar minha conta';}
+});
+async function authSignOut(){if(shapenSupabase)await shapenSupabase.auth.signOut();shapenSession=null;$('appShell').style.display='none';$('authGate').classList.remove('hide');setAuthMode('login');}
+async function beginCheckout(tier){
+ const msg=$('checkoutMessage');if(!shapenSession){msg.textContent='Entre na sua conta para continuar.';return}
+ const paymentMethod=$('authPaymentMethod').value;msg.textContent='Preparando checkout seguro...';
+ try{
+  const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+shapenSession.access_token},body:JSON.stringify({plan:tier,paymentMethod,email:shapenSession.user.email})});
+  const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível iniciar o pagamento.');
+  if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
+  msg.innerHTML='Checkout preparado. <a href="'+escapeHtml(data.checkoutUrl)+'" target="_blank" rel="noopener noreferrer">Abrir pagamento seguro</a>. Depois do pagamento, aguarde a confirmação para liberar o plano.';
+ }catch(e){msg.textContent=e.message||'Falha ao preparar o pagamento.'}
+}
+function applyPlanVisibility(plan){
+ const levels={basico:1,premium:2,ultimate:3};const level=levels[plan]||0;
+ const required={coach:2,progress:1};
+ document.querySelectorAll('.nav[data-page]').forEach(n=>{
+  const page=n.dataset.page;
+  if(page==='coach')n.classList.toggle('hide',level<(required[page]||1));
+ });
+ const ultimateItems=[...document.querySelectorAll('#page-nutrition .card')];
+ // Resource-specific checks are applied again by the server before production use.
+ document.querySelectorAll('[data-plan-min]').forEach(el=>el.classList.toggle('hide',level<(levels[el.dataset.planMin]||1)));
+}
+initializeShapenAuth();
+</script>
+
 </body></html>
