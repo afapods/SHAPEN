@@ -91,6 +91,7 @@ function requireShapenPlan(minimumPlan) {
         ["active", "authorized"].includes(String(item.status || "").toLowerCase()) &&
         (!item.current_period_end || new Date(item.current_period_end).getTime() > now)
       );
+      if (!active && minimumPlan === "basico") { req.shapenPlan = "gratis"; return next(); }
       if (!active || (levels[active.plan] || 0) < (levels[minimumPlan] || 99)) {
         return res.status(403).json({
           error: "Este recurso exige um plano SHAPEN " + String(minimumPlan).toUpperCase() + " ativo."
