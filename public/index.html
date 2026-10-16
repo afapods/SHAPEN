@@ -160,7 +160,7 @@
  <div class="eyebrow">SHAPEN MEMBERSHIP</div>
  <h1 class="headline">Escolha seu próximo nível.</h1>
  <p class="sub">Comece com o essencial ou tenha mais ferramentas para manter sua evolução. Você pode mudar de plano quando quiser.</p>
- <div class="plans-note"><span class="plans-note-icon">✦</span><div><strong>Assinaturas mensais seguras</strong><p>O checkout será processado pelo Mercado Pago. A tela de pagamento pode oferecer Pix, boleto, cartões e saldo, conforme as opções habilitadas para sua conta.</p></div></div><div class="card" style="margin-bottom:16px"><label class="label" for="checkoutEmail">E-mail para a assinatura</label><input class="field" id="checkoutEmail" type="email" autocomplete="email" placeholder="voce@email.com" maxlength="160"><div id="checkoutStatus" class="muted small" aria-live="polite"></div></div>
+ <div class="plans-note"><span class="plans-note-icon">✦</span><div><strong>Pix ou cartão de crédito</strong><p>Escolha Pix para pagar um mês por vez, ou cartão de crédito para configurar a cobrança recorrente mensal. O checkout é processado com segurança pelo Mercado Pago.</p></div></div><div class="card" style="margin-bottom:16px"><label class="label" for="checkoutEmail">Seu e-mail</label><input class="field" id="checkoutEmail" type="email" autocomplete="email" placeholder="voce@email.com" maxlength="160"><label class="label" for="checkoutMethod" style="display:block;margin-top:12px">Forma de pagamento</label><select class="field" id="checkoutMethod"><option value="card">Cartão de crédito · cobrança mensal recorrente</option><option value="pix">Pix · pagamento de um mês por vez</option></select><p class="muted small">No Pix, será necessário realizar um novo pagamento a cada mês. No cartão, a recorrência depende da aprovação e disponibilidade do Mercado Pago.</p><div id="checkoutStatus" class="muted small" aria-live="polite"></div></div>
  <div class="plans-grid">
   <article class="plan-card">
    <div class="plan-top"><span class="plan-label">PARA COMEÇAR</span><span class="plan-symbol">◉</span></div>
@@ -226,19 +226,20 @@
 <div class="footer">SHAPEN · Protótipo funcional local · Recomendações educativas, não atendimento médico.</div>
 </div>
 <script>
-async async function choosePlan(tier){
+async function choosePlan(tier){
  const plans={basico:{name:'Básico',price:'R$ 24,90/mês'},premium:{name:'Premium',price:'R$ 59,90/mês'},ultimate:{name:'Ultimate',price:'R$ 99,90/mês'}};
  const chosen=plans[tier];if(!chosen)return;
  localStorage.setItem('shapen_selected_plan',tier);
  const target=$('planSelectionText');const status=document.getElementById('checkoutStatus');
- if(target)target.textContent=chosen.name+' — '+chosen.price+'. Preparando checkout...';
+ const paymentMethod=document.getElementById('checkoutMethod')?.value||'card';
+  if(target)target.textContent=chosen.name+' — '+chosen.price+'. Preparando checkout de '+(paymentMethod==='pix'?'Pix':'cartão')+'...';
  const email=document.getElementById('checkoutEmail')?.value.trim();
  if(!email || !email.includes('@') || !email.includes('.')){if(status)status.textContent='Informe um e-mail válido para continuar.';toast('Informe seu e-mail para assinar.');return;}
  try{
-  const res=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:tier,email:email})});
+  const res=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan:tier,email:email,paymentMethod:paymentMethod})});
   const data=await res.json();if(!res.ok)throw new Error(data.error||'Não foi possível iniciar o pagamento.');
   if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
-  if(status)status.innerHTML='Checkout pronto: <a href="'+escapeHtml(data.checkoutUrl)+'" target="_blank" rel="noopener noreferrer">abrir pagamento seguro</a>';
+  if(status)status.innerHTML='Checkout de '+(paymentMethod==='pix'?'Pix (pagamento único)':'cartão de crédito (assinatura mensal)')+' pronto: <a href="'+escapeHtml(data.checkoutUrl)+'" target="_blank" rel="noopener noreferrer">abrir pagamento seguro</a>'+(paymentMethod==='pix'?'<p>Importante: o Pix cobre este mês; para continuar no mês seguinte, será necessário pagar novamente.</p>':'');
  }catch(e){if(status)status.textContent=e.message||'Checkout indisponível.';toast(e.message||'Não foi possível iniciar o pagamento.');}
 }
 function renderPlanSelection(){
