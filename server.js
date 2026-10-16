@@ -102,7 +102,7 @@ function cleanProfile(p) {
 }
 const goalNames = { muscle: "hipertrofia", fat: "redução de gordura", fitness: "condicionamento", recomp: "recomposição corporal" };
 
-app.post("/api/plan", async (req, res) => {
+app.post("/api/plan", authenticateSupabaseRequest, requireShapenPlan("basico"), async (req, res) => {
   let p;
   try { p = cleanProfile(req.body?.profile); }
   catch (e) { return res.status(400).json({ error: e.message }); }
@@ -154,7 +154,7 @@ app.post("/api/plan", async (req, res) => {
   }
 });
 
-app.post("/api/coach", async (req, res) => {
+app.post("/api/coach", authenticateSupabaseRequest, requireShapenPlan("premium"), async (req, res) => {
   const message = String(req.body?.message || "").trim().slice(0, 400);
   if (!message) return res.status(400).json({ error: "Escreva uma pergunta." });
   try {
@@ -177,7 +177,7 @@ app.post("/api/coach", async (req, res) => {
 });
 
 
-app.post("/api/adapt-meals", async (req, res) => {
+app.post("/api/adapt-meals", authenticateSupabaseRequest, requireShapenPlan("premium"), async (req, res) => {
   const request = String(req.body?.request || "").trim().slice(0, 400);
   if (!request) return res.status(400).json({ error: "Conte o que deseja mudar no cardápio." });
   const rawProfile = req.body?.profile;
@@ -255,9 +255,9 @@ app.put("/api/profile", authenticateSupabaseRequest, async (req, res) => {
     return res.status(502).json({ error: "Não foi possível salvar seu perfil." });
   }
 });
-app.post("/api/checkout", async (req, res) => {
+app.post("/api/checkout", authenticateSupabaseRequest, async (req, res) => {
   const tier = String(req.body?.plan || "");
-  const email = String(req.body?.email || "").trim().slice(0, 160);
+  const email = String(req.shapenUser.email || "").trim().slice(0, 160);
   const paymentMethod = String(req.body?.paymentMethod || "card");
   const chosen = SUBSCRIPTION_PLANS[tier];
   if (!chosen) return res.status(400).json({ error: "Plano inválido." });
@@ -276,7 +276,7 @@ app.post("/api/checkout", async (req, res) => {
         body: JSON.stringify({
           items: [{ id: "shapen-" + tier, title: chosen.title + " — acesso por 1 mês", quantity: 1, unit_price: chosen.amount, currency_id: "BRL" }],
           payer: { email },
-          external_reference: "shapen-pix-" + tier + "-" + Date.now(),
+          external_reference: req.shapenUser.id + "|" + tier,
           back_urls: { success: baseUrl + "/?payment=success", failure: baseUrl + "/?payment=failure", pending: baseUrl + "/?payment=pending" },
           auto_return: "approved",
           payment_methods: { excluded_payment_types: [{ id: "credit_card" }, { id: "debit_card" }, { id: "ticket" }, { id: "account_money" }, { id: "prepaid_card" }] }
@@ -288,7 +288,7 @@ app.post("/api/checkout", async (req, res) => {
         method: "POST", headers,
         body: JSON.stringify({
           reason: chosen.title + " — assinatura mensal",
-          external_reference: "shapen-card-" + tier + "-" + Date.now(),
+          external_reference: req.shapenUser.id + "|" + tier,
           payer_email: email,
           auto_recurring: { frequency: 1, frequency_type: "months", transaction_amount: chosen.amount, currency_id: "BRL" },
           back_url: baseUrl + "/?subscription=return",
@@ -300,10 +300,19 @@ app.post("/api/checkout", async (req, res) => {
     if (!response.ok) { console.error("Mercado Pago checkout error:", response.status, JSON.stringify(data).slice(0, 1000)); return res.status(502).json({ error: "O Mercado Pago não conseguiu criar o checkout. Confira as credenciais e a configuração da conta." }); }
     const checkoutUrl = paymentMethod === "pix" ? (data.init_point || data.sandbox_init_point) : data.init_point;
     if (!checkoutUrl) return res.status(502).json({ error: "O Mercado Pago não retornou o link seguro de pagamento." });
+    try {
+      await supabaseAdminRequest(req.shapenSupabase, "shapen_subscriptions", {
+        method: "POST", headers: { Prefer: "return=minimal" },
+        body: JSON.stringify({ user_id: req.shapenUser.id, plan: tier, provider: "mercadopago", provider_subscription_id: paymentMethod === "card" ? String(data.id) : null, payment_method: paymentMethod, status: "pending" })
+      });
+    } catch (dbError) {
+      console.error("Could not persist pending checkout:", dbError.message);
+      return res.status(502).json({ error: "O checkout foi criado, mas não conseguimos registrar sua assinatura. Não faça outro pagamento; procure o suporte." });
+    }
     return res.json({ checkoutUrl, paymentId: data.id, plan: tier, amount: chosen.amount, paymentMethod, recurring: paymentMethod === "card" });
   } catch (e) { console.error("checkout error:", e.message); return res.status(502).json({ error: "Não foi possível conectar ao Mercado Pago agora." }); }
 });
-app.post("/api/food-photo", async (req, res) => {
+app.post("/api/food-photo", authenticateSupabaseRequest, requireShapenPlan("ultimate"), async (req, res) => {
   const image = String(req.body?.image || "");
   if (!/^data:image\/(jpeg|jpg|png|webp);base64,/.test(image) || image.length > 5500000) return res.status(400).json({ error: "Envie uma foto JPG, PNG ou WebP de até 4 MB." });
   try {
