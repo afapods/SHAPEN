@@ -592,15 +592,19 @@ function showSubscriptionPlans(){
  $('authForms').classList.add('hide');$('authSetupMissing').classList.add('hide');$('subscriptionGate').classList.remove('hide');
  $('checkoutMessage').textContent='Escolha seu plano para desbloquear mais recursos.';
 }
+let checkoutInProgress=false;
 async function beginCheckout(tier){
- const msg=$('checkoutMessage');if(!shapenSession){msg.textContent='Entre na sua conta para continuar.';return}
+ const msg=$('checkoutMessage');
+ if(checkoutInProgress){msg.textContent='Já estamos preparando seu checkout. Aguarde o redirecionamento para evitar tentativas duplicadas.';return}
+ if(!shapenSession){msg.textContent='Entre na sua conta para continuar.';return}
+ checkoutInProgress=true;
  const paymentMethod=$('authPaymentMethod').value;msg.textContent='Preparando checkout seguro...';
  try{
   const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+shapenSession.access_token},body:JSON.stringify({plan:tier,paymentMethod,email:shapenSession.user.email})});
   const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível iniciar o pagamento.');
   if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
   msg.textContent='Redirecionando para o checkout seguro do Mercado Pago…';window.location.assign(data.checkoutUrl);
- }catch(e){msg.textContent=e.message||'Falha ao preparar o pagamento.'}
+ }catch(e){checkoutInProgress=false;msg.textContent=e.message||'Falha ao preparar o pagamento.'}
 }
 function renderSubscriptionManagement(data){
  const root=$('subscriptionManagement');if(!root)return;
