@@ -526,6 +526,7 @@ async function refreshShapenAccess(){
   window.shapenPlan=plan;applyPlanVisibility(plan);
   const freeNotice=$('freePlanNotice');
   if(freeNotice)freeNotice.classList.toggle('hide',plan!=='gratis');
+  if(new URLSearchParams(window.location.search).get('plans')==='1'){showSubscriptionPlans();return;}
   return;
  }catch(e){
   $('authForms').classList.add('hide');$('subscriptionGate').classList.add('hide');$('authSetupMissing').classList.remove('hide');
