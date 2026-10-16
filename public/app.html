@@ -603,7 +603,9 @@ async function beginCheckout(tier){
   const r=await fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+shapenSession.access_token},body:JSON.stringify({plan:tier,paymentMethod,email:shapenSession.user.email})});
   const data=await r.json();if(!r.ok)throw new Error(data.error||'Não foi possível iniciar o pagamento.');
   if(!data.checkoutUrl)throw new Error('O provedor não retornou um link de pagamento.');
-  msg.textContent='Redirecionando para o checkout seguro do Mercado Pago…';window.location.assign(data.checkoutUrl);
+  // Navigate directly to Mercado Pago. Do not render a secondary blue checkout link.
+  msg.textContent='Abrindo o ambiente seguro do Mercado Pago…';
+  window.location.replace(data.checkoutUrl);
  }catch(e){checkoutInProgress=false;msg.textContent=e.message||'Falha ao preparar o pagamento.'}
 }
 function renderSubscriptionManagement(data){
