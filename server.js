@@ -280,7 +280,9 @@ app.get("/api/me", authenticateSupabaseRequest, async (req, res) => {
     const latestSubscription = (subscriptions || [])[0] || null;
     return res.json({ user: req.shapenUser, profile: profiles?.[0] || null, subscription: active, latestSubscription, subscriptions: subscriptions || [], authConfigured: true });
   } catch (error) {
-    return res.status(502).json({ error: "Não foi possível carregar sua conta. Confira se o schema do Supabase foi aplicado." });
+    // Keep detailed database diagnostics in server logs, never expose schema details to the browser.
+    console.error("SHAPEN /api/me failed:", error.message, "status:", error.status || "unknown");
+    return res.status(502).json({ error: "Não foi possível carregar sua conta. Confira as tabelas shapen_profiles e shapen_subscriptions no Supabase e tente novamente." });
   }
 });
 app.put("/api/profile", authenticateSupabaseRequest, async (req, res) => {
