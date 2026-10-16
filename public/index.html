@@ -216,7 +216,7 @@
  <div class="plan-selection card" id="planSelection" aria-live="polite">
   <h3>Seu plano escolhido</h3><p id="planSelectionText" class="muted small">Ainda não escolheu um plano.</p>
  </div>
- <p class="plan-disclaimer">Importante: estes preços são a proposta inicial do SHAPEN. A escolha nesta tela ainda não inicia cobrança nem ativa limites de acesso; o sistema de pagamentos e controle de assinatura precisa ser integrado antes do lançamento comercial.</p>
+ <p class="plan-disclaimer">A cobrança será iniciada no checkout seguro do Mercado Pago após configurar as credenciais comerciais no servidor. O acesso por plano ainda precisa de conta de usuário e validação de assinatura antes de ser usado como controle de acesso comercial.</p>
 </section>
 <section class="page" id="page-coach">
  <div class="eyebrow">Copiloto com IA</div><h1 class="headline">A rotina mudou?<br>Reorganize.</h1><p class="sub">Quando o servidor estiver configurado, suas perguntas serão respondidas por um modelo de IA. Sem servidor configurado, o app informa que a conexão ainda não está ativa.</p>
@@ -245,7 +245,7 @@ function renderPlanSelection(){
  const tier=localStorage.getItem('shapen_selected_plan');
  const plans={basico:{name:'Básico',price:'R$ 24,90/mês'},premium:{name:'Premium',price:'R$ 59,90/mês'},ultimate:{name:'Ultimate',price:'R$ 99,90/mês'}};
  const target=$('planSelectionText');
- if(target&&tier&&plans[tier])target.textContent=plans[tier].name+' — '+plans[tier].price+'. Seleção registrada neste dispositivo; pagamento ainda não ativado.';
+ if(target&&tier&&plans[tier])target.textContent=plans[tier].name+' — '+plans[tier].price+'. Seleção local registrada. Para pagar, escolha o plano e informe seu e-mail acima.';
 }
 
 const $=id=>document.getElementById(id);
